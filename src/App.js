@@ -35,7 +35,7 @@ function App() {
           <div>Zvolený objekt: {selectedFile}</div>
           <ThreeCanvas
             observerId={selectedObserverId}
-            modelFileName={selectedFile}
+            modelFileName={`/Dataset/3d_models/${selectedFile}`}
           />
         </>
       )}
