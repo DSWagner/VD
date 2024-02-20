@@ -3,12 +3,13 @@ import * as THREE from "three";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-const ThreeCanvas = ({ modelFileName }) => {
+const ThreeCanvas = ({ observerId, modelFileName }) => {
   const canvasRef = useRef(null);
   const sceneRef = useRef(null); // Keep a ref to the scene
 
   useEffect(() => {
     if (!modelFileName) return; // Don't proceed if modelFileName is not provided
+    const modelFilePath = `/Dataset/3d_models/${modelFileName}`;
 
     // Initialize scene, camera, and renderer
     const scene = new THREE.Scene();
@@ -23,7 +24,7 @@ const ThreeCanvas = ({ modelFileName }) => {
 
     // Load the STL model
     const loader = new STLLoader();
-    loader.load(modelFileName, (geometry) => {
+    loader.load(modelFilePath, (geometry) => {
       geometry.computeBoundingBox();
       const boundingBoxCenter = geometry.boundingBox.getCenter(
         new THREE.Vector3()
@@ -69,12 +70,45 @@ const ThreeCanvas = ({ modelFileName }) => {
     };
     animate();
 
+    // Load corresponding JSON file if observerId is selected
+    if (observerId) {
+      const jsonFileName = modelFileName.replace(".stl", ".json");
+      const jsonFilePath = `${process.env.PUBLIC_URL}/Dataset/gazePerObject/${jsonFileName}`;
+
+      // Fetch the JSON file
+      fetch(jsonFilePath)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          // Assuming 'data' is the array of objects
+          const matchingObject = data.find(
+            (item) => item["observer id"].toString() === observerId.toString()
+          );
+          if (matchingObject) {
+            console.log("Found matching object:", matchingObject);
+            // Access and log the orientation from the matching object
+            const orientation = matchingObject.condition.orientation;
+            console.log("Orientation of the matching object:", orientation);
+          } else {
+            console.log(
+              "No matching object found for observer ID:",
+              observerId
+            );
+          }
+        })
+        .catch((error) => console.error("Error loading JSON file:", error));
+    }
+
     return () => {
       // Cleanup on component unmount or modelFileName change
       scene.clear(); // Clear the scene
       renderer.dispose(); // Dispose of the renderer
     };
-  }, [modelFileName]); // Depend on modelFileName to re-trigger loading
+  }, [observerId, modelFileName]); // Depend on modelFileName to re-trigger loading
 
   return (
     <div
