@@ -18,7 +18,6 @@ const ThreeCanvas = ({ observerId, modelFileName }) => {
 
     // Initialize scene, camera, and renderer
     const scene = sceneRef.current;
-    sceneRef.current = scene; // Store the scene in a ref
     const camera = cameraRef.current;
     const renderer = rendererRef.current;
     renderer.setSize(500, 500);
@@ -40,14 +39,7 @@ const ThreeCanvas = ({ observerId, modelFileName }) => {
       mesh.name = "shape";
       scene.add(mesh);
 
-      // Calculate a suitable position for the camera
-      const size = geometry.boundingBox.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z);
-      const fov = camera.fov * (Math.PI / 180);
-      let cameraZ = Math.abs((maxDim / 4) * Math.tan(fov * 2));
-
       // This could be adjusted to make sure the model is fully visible based on the camera's angle and the object's dimensions
-      cameraZ *= 5; // Increase the multiplier to move the camera further away
       const cameraPosition = new THREE.Vector3(
         boundingBoxCenter.x,
         // boundingBoxCenter.y,
@@ -66,6 +58,40 @@ const ThreeCanvas = ({ observerId, modelFileName }) => {
 
       // Ensure the scene is rendered from the new camera position
       renderer.render(scene, camera);
+
+      function addFixationSpheres(fixations, offset, matrix, rotationRadians) {
+        // Invert the matrix to apply the rotation in the opposite direction
+        const invertedMatrix = matrix.clone().invert();
+        // // Create a rotation matrix for the Y-axis rotation
+        // const yRotationMatrix = new THREE.Matrix4().makeRotationY(
+        //   rotationRadians
+        // );
+
+        // // Combine the inverted matrix with the Y-axis rotation
+        // // This ensures the rotation is applied in the correct order
+        // const combinedMatrix = invertedMatrix.multiply(yRotationMatrix);
+        fixations.forEach((fixation) => {
+          const position = fixation.position;
+          const geometry = new THREE.SphereGeometry(5, 32, 32); // Adjust the size as needed
+          const material = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red color for visibility
+          const sphere = new THREE.Mesh(geometry, material);
+
+          // Set the position of the sphere using the fixation position
+          console.log(position);
+          sphere.position.set(
+            position[0] - offset[0],
+            position[1] - offset[1],
+            position[2] - offset[2]
+          );
+
+          // Apply the inverted matrix to each sphere
+          // Note: Since applyMatrix4 also affects the position, we apply it before setting the position
+          sphere.applyMatrix4(invertedMatrix);
+
+          // Add the sphere to the scene
+          sceneRef.current.add(sphere);
+        });
+      }
 
       // Load corresponding JSON file if observerId is selected
       if (observerId) {
@@ -91,6 +117,40 @@ const ThreeCanvas = ({ observerId, modelFileName }) => {
               const orientation = matchingObject.condition.orientation;
               console.log("Orientation of the matching object:", orientation);
 
+              const offset = matchingObject.condition.offset;
+              // mesh.position.x += offset[0]; // Apply the X offset
+              // mesh.position.y += offset[1]; // Apply the Y offset
+              // mesh.position.z += offset[2]; // Apply the Z offset
+
+              // Creating a Matrix4 from the 3x3 rotation matrix
+              const matrix = new THREE.Matrix4();
+              matrix.set(
+                orientation[0],
+                orientation[1],
+                orientation[2],
+                0,
+                orientation[3],
+                orientation[4],
+                orientation[5],
+                0,
+                orientation[6],
+                orientation[7],
+                orientation[8],
+                0,
+                0,
+                0,
+                0,
+                1
+              );
+
+              // // Apply the matrix to the mesh
+              // mesh.matrix.copy(matrix);
+              // mesh.matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
+              // mesh.rotation.setFromQuaternion(mesh.quaternion);
+
+              // // Ensure the mesh's matrixAutoUpdate is false if you directly manipulate the matrix or quaternion
+              // mesh.matrixAutoUpdate = false;
+
               // Define direction and calculate rotation in degrees
               const direction = matchingObject.condition.direction;
               console.log("Direction of the matching object:", direction);
@@ -104,6 +164,26 @@ const ThreeCanvas = ({ observerId, modelFileName }) => {
 
               // Apply rotation around Y axis
               mesh.rotation.y = rotationRadians;
+
+              // Read and console log the fixations attribute
+              const fixations = matchingObject.fixations;
+              console.log("Fixations:", fixations);
+              addFixationSpheres(fixations, offset, matrix, rotationRadians);
+
+              // Example: Log each fixation detail
+              fixations.forEach((fixation, index) => {
+                console.log(`Fixation ${index + 1}:`, fixation);
+                // You can access specific properties like fixation.position, fixation.duration, etc.
+                console
+                  .log
+                  // `Position: ${fixation.position}, Duration: ${fixation.duration}, Start Timestamp: ${fixation["start timestamp"]}`
+                  ();
+
+                // If you need to log the ellipsoid details
+                console.log(
+                  `Ellipsoid Center: ${fixation.ellipsoid.center}, Semiaxes: ${fixation.ellipsoid.semiaxes}`
+                );
+              });
             } else {
               console.log(
                 "No matching object found for observer ID:",
