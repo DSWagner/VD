@@ -8,7 +8,7 @@ import ThreeCanvas from "./ThreeCanvas";
 function App() {
   const [selectedFile, setSelectedFile] = useState("");
   const [selectedObserverId, setSelectedObserverId] = useState("");
-  const [clickedTimeViz, setClickedTimeViz] = useState("");
+  const [timeViz, setTimeViz] = useState(false);
 
   const handleFileSelected = (file) => {
     setSelectedFile(file);
@@ -23,7 +23,7 @@ function App() {
   const handleVisualizationClick = () => {
     // Define what should happen when the button is clicked
     // This could be updating state, calling a function, etc.
-    setClickedTimeViz(true);
+    setTimeViz(true);
   };
 
   return (
@@ -39,7 +39,8 @@ function App() {
           <ThreeCanvas
             observerId={selectedObserverId}
             modelFileName={selectedFile}
-            timeViz={clickedTimeViz}
+            timeViz={timeViz}
+            setTimeViz={setTimeViz}
           />
         </>
       )}
