@@ -8,7 +8,7 @@ import ThreeCanvas from "./ThreeCanvas";
 function App() {
   const [selectedFile, setSelectedFile] = useState("");
   const [selectedObserverId, setSelectedObserverId] = useState("");
-  const [isHeatmapChecked, setHeatmapChecked] = useState(false);
+  const [clickedTimeViz, setClickedTimeViz] = useState("");
 
   const handleFileSelected = (file) => {
     setSelectedFile(file);
@@ -19,8 +19,11 @@ function App() {
     setSelectedObserverId(observerId);
   };
 
-  const handleHeatmapCheckboxChange = (e) => {
-    setHeatmapChecked(e.target.checked);
+  // Handler for the visualization button
+  const handleVisualizationClick = () => {
+    // Define what should happen when the button is clicked
+    // This could be updating state, calling a function, etc.
+    setClickedTimeViz(true);
   };
 
   return (
@@ -36,6 +39,7 @@ function App() {
           <ThreeCanvas
             observerId={selectedObserverId}
             modelFileName={selectedFile}
+            timeViz={clickedTimeViz}
           />
         </>
       )}
@@ -51,19 +55,12 @@ function App() {
         </>
       )}
       {selectedObserverId && ( // Only show the observer ID if it is selected
-        <div>Zvolené ID pozorovateľa: {selectedObserverId}</div>
-      )}
-      {selectedObserverId && (
         <>
-          <div>
-            <input
-              type="checkbox"
-              id="heatmapCheckbox"
-              checked={isHeatmapChecked}
-              onChange={handleHeatmapCheckboxChange}
-            />
-            <label htmlFor="heatmapCheckbox">Heatmap</label>
-          </div>
+          <div>Zvolené ID pozorovateľa: {selectedObserverId}</div>
+          {/* Conditional button rendering */}
+          <button onClick={handleVisualizationClick}>
+            Vizualizácia v čase
+          </button>
         </>
       )}
     </div>

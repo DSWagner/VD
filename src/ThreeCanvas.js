@@ -56,7 +56,15 @@ const ThreeCanvas = ({ observerId, modelFileName }) => {
       // Ensure the scene is rendered from the new camera position
       renderer.render(scene, camera);
 
-      function addFixationSpheres(fixations, offset, matrix, rotationRadians) {
+      function addFixationSpheres(
+        fixations,
+        offset,
+        matrix,
+        rotationRadians,
+        index = 0
+      ) {
+        // Stop the recursion if we've displayed all fixations
+        if (index >= fixations.length) return;
         // Invert the matrix to apply the rotation in the opposite direction
         const invertedMatrix = matrix.clone().invert();
 
@@ -68,15 +76,51 @@ const ThreeCanvas = ({ observerId, modelFileName }) => {
         const finalMatrix = new THREE.Matrix4();
         finalMatrix.multiplyMatrices(rotationMatrix, invertedMatrix);
 
+        // const fixation = fixations[index];
+        // const position = fixation.position;
+        // const geometry = new THREE.SphereGeometry(5, 32, 32); // Adjust the size as needed
+        // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green color for visibility
+        // const sphere = new THREE.Mesh(geometry, material);
+
+        // sphere.position.x = position[0] - offset[0];
+        // sphere.position.y = position[1] - offset[1];
+        // sphere.position.z = position[2] - offset[2];
+
+        // // Apply the inverted matrix to each sphere
+        // sphere.applyMatrix4(finalMatrix);
+
+        // // Add the sphere to the scene
+        // sceneRef.current.add(sphere);
+
+        // // Set a timer for the duration the mesh should be visible
+        // setTimeout(() => {
+        //   // After the duration, remove the sphere from the scene
+        //   sceneRef.current.remove(sphere);
+        //   sphere.geometry.dispose();
+        //   sphere.material.dispose();
+
+        //   // Render the scene again to reflect the changes
+        //   rendererRef.current.render(sceneRef.current, cameraRef.current);
+
+        //   // Recursively add the next sphere after the current one's duration
+        //   addFixationSpheres(
+        //     fixations,
+        //     offset,
+        //     matrix,
+        //     rotationRadians,
+        //     index + 1
+        //   );
+        // }, fixation.duration); // Convert duration to milliseconds
+
         fixations.forEach((fixation) => {
           const position = fixation.position;
           const geometry = new THREE.SphereGeometry(5, 32, 32); // Adjust the size as needed
           const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Red color for visibility
           const sphere = new THREE.Mesh(geometry, material);
 
-          sphere.position.x = fixation.ellipsoid.center[0] - offset[0];
-          sphere.position.y = fixation.ellipsoid.center[1] - offset[1];
-          sphere.position.z = fixation.ellipsoid.center[2] - offset[2];
+          sphere.position.x = position[0] - offset[0];
+          sphere.position.y = position[1] - offset[1];
+          sphere.position.z = position[2] - offset[2];
 
           // Apply the inverted matrix to each sphere
           sphere.applyMatrix4(finalMatrix);
