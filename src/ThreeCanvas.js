@@ -11,6 +11,8 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
   const rendererRef = useRef(new THREE.WebGLRenderer({ antialias: true }));
   const controlsRef = useRef(null);
   const canvasRef = useRef(null);
+  const originalCameraPos = useRef(null);
+  const observerPos = useRef(null);
 
   useEffect(() => {
     if (!modelFileName) return; // Don't proceed if modelFileName is not provided
@@ -51,6 +53,8 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
       camera.position.copy(cameraPosition);
       camera.lookAt(boundingBoxCenter);
 
+      originalCameraPos.current = camera.position.clone();
+
       // Update the controls target to look at the center of the model
       controls.target.copy(boundingBoxCenter);
 
@@ -89,6 +93,20 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
 
       // Load corresponding JSON file if observerId is selected
       if (observerId) {
+        // Create a sphere geometry with a radius of 5 and 32 width/height segments
+        const observerGeo = new THREE.SphereGeometry(10, 32, 32);
+        // Create a blue basic material
+        const observerMat = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+        // Create a mesh with the geometry and material
+        const observerSph = new THREE.Mesh(observerGeo, observerMat);
+        // Set the name of the sphere
+        observerSph.name = "observer";
+        // Set the position of the sphere to the original camera position
+        observerSph.position.copy(originalCameraPos.current);
+        observerPos.current = observerSph.position.clone();
+        // Add the sphere to the scene
+        sceneRef.current.add(observerSph);
+
         const jsonFileName = modelFileName.replace(".stl", ".json");
         const jsonFilePath = `${process.env.PUBLIC_URL}/Dataset/gazePerObject/${jsonFileName}`;
 
@@ -191,16 +209,13 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
       const camera = cameraRef.current;
       const renderer = rendererRef.current;
       const controls = controlsRef.current;
-      scene.children.forEach((child) => {
-        // console.log(child.name);
-        if (child.name !== "shape") {
-          // Make meshes not named "shape" invisible
-          child.visible = false;
-        }
-      });
 
       scene.children = scene.children.filter((child) => {
-        if (child.name === "red" || child.name === "line") {
+        if (
+          child.name === "red" ||
+          child.name === "line" ||
+          child.name === "vector"
+        ) {
           if (child.geometry) {
             child.geometry.dispose(); // Disposes the geometry
           }
@@ -212,7 +227,6 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
               child.material.dispose(); // Disposes the material
             }
           }
-          // No need to dispose of textures here unless the children specifically use them
           return false; // Filter out the child, effectively removing it
         }
         return true; // Keep the child in the scene
@@ -225,15 +239,8 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
         rotationRadians,
         index = 0
       ) {
-        // // Stop the recursion if we've displayed all fixations
+        // Stop the recursion if we've displayed all fixations
         if (index >= fixations.length) {
-          sceneRef.current.children.forEach((child) => {
-            // console.log(child.name);
-            if (child.name !== "shape") {
-              // Make meshes not named "shape" invisible
-              child.visible = true;
-            }
-          });
           return;
         }
         // Find the last sphere added to the scene
@@ -267,7 +274,37 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
         // Apply the inverted matrix to each sphere
         sphere.applyMatrix4(finalMatrix);
 
-        sphere.position.z = 30 + index * (300 / fixations.length);
+        const originalPos = sphere.position;
+
+        const directionVector = new THREE.Vector3(
+          originalCameraPos.current.x - sphere.position.x,
+          originalCameraPos.current.y - sphere.position.y,
+          originalCameraPos.current.z - sphere.position.z
+        ).normalize();
+
+        const observerDist = originalPos.distanceTo(observerPos.current);
+        // Create an arrow helper with the direction vector
+        const arrowHelper = new THREE.ArrowHelper(
+          directionVector,
+          sphere.position,
+          observerDist,
+          0x800080,
+          0,
+          0
+        ); // 0x800080 is the color purple
+        arrowHelper.name = "vector";
+        sceneRef.current.add(arrowHelper);
+
+        const zDistance =
+          -originalPos.z + 75 + index * (200 / fixations.length);
+        const newPosition = new THREE.Vector3()
+          .copy(sphere.position)
+          .add(directionVector.multiplyScalar(zDistance));
+
+        // Set the new position to the sphere
+        sphere.position.copy(newPosition);
+        // sphere.position.z = zDistance;
+        console.log(sphere.position.z);
 
         // Add the sphere to the scene
         sceneRef.current.add(sphere);
@@ -296,7 +333,7 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
           if (now < endTime) {
             // Update sphere scale based on the fraction of the duration elapsed
             // This example linearly scales the sphere from 1 to 2 times its original size
-            let scale = Math.log(1 + fraction); // Adjust this formula as needed
+            let scale = Math.log(fraction); // Adjust this formula as needed
             sphere.scale.set(scale, scale, scale);
 
             requestAnimationFrame(animate);
