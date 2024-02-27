@@ -46,7 +46,7 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
       // This could be adjusted to make sure the model is fully visible based on the camera's angle and the object's dimensions
       const cameraPosition = new THREE.Vector3(boundingBoxCenter.x, 144, 430);
 
-      console.log(camera.position);
+      // console.log(camera.position);
 
       camera.position.copy(cameraPosition);
       camera.lookAt(boundingBoxCenter);
@@ -106,10 +106,10 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
               (item) => item["observer id"].toString() === observerId.toString()
             );
             if (matchingObject) {
-              console.log("Found matching object:", matchingObject);
+              // console.log("Found matching object:", matchingObject);
               // Access and log the orientation from the matching object
               const orientation = matchingObject.condition.orientation;
-              console.log("Orientation of the matching object:", orientation);
+              // console.log("Orientation of the matching object:", orientation);
 
               const offset = matchingObject.condition.offset;
 
@@ -142,7 +142,7 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
 
               // Convert degrees to radians for THREE.js
               let rotationRadians = THREE.MathUtils.degToRad(rotationDegrees);
-              console.log(rotationRadians);
+              // console.log(rotationRadians);
 
               // Apply rotation around Y axis
               mesh.rotation.y = rotationRadians;
@@ -192,15 +192,30 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
       const renderer = rendererRef.current;
       const controls = controlsRef.current;
       scene.children.forEach((child) => {
-        console.log(child.name);
+        // console.log(child.name);
         if (child.name !== "shape") {
           // Make meshes not named "shape" invisible
           child.visible = false;
         }
-        // Else, ensure the "shape" mesh remains visible
-        else {
-          child.visible = true;
+      });
+
+      scene.children = scene.children.filter((child) => {
+        if (child.name === "red" || child.name === "line") {
+          if (child.geometry) {
+            child.geometry.dispose(); // Disposes the geometry
+          }
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              // In case of multi-material
+              child.material.forEach((material) => material.dispose());
+            } else {
+              child.material.dispose(); // Disposes the material
+            }
+          }
+          // No need to dispose of textures here unless the children specifically use them
+          return false; // Filter out the child, effectively removing it
         }
+        return true; // Keep the child in the scene
       });
 
       function addFixationSpheres(
@@ -213,7 +228,7 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
         // // Stop the recursion if we've displayed all fixations
         if (index >= fixations.length) {
           sceneRef.current.children.forEach((child) => {
-            console.log(child.name);
+            // console.log(child.name);
             if (child.name !== "shape") {
               // Make meshes not named "shape" invisible
               child.visible = true;
@@ -221,6 +236,12 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
           });
           return;
         }
+        // Find the last sphere added to the scene
+        const lastSphere = sceneRef.current.children
+          .filter(
+            (child) => child instanceof THREE.Mesh && child.name === "red"
+          )
+          .pop();
         // Invert the matrix to apply the rotation in the opposite direction
         const invertedMatrix = matrix.clone().invert();
         // Create a rotation matrix for y-axis
@@ -233,9 +254,11 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
 
         const fixation = fixations[index];
         const position = fixation.position;
-        const geometry = new THREE.SphereGeometry(5, 32, 32); // Adjust the size as needed
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green color for visibility
+        const geometry = new THREE.SphereGeometry(3, 32, 32); // Adjust the size as needed
+        const material = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Green color for visibility
         const sphere = new THREE.Mesh(geometry, material);
+
+        sphere.name = "red";
 
         sphere.position.x = position[0] - offset[0];
         sphere.position.y = position[1] - offset[1];
@@ -244,28 +267,52 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
         // Apply the inverted matrix to each sphere
         sphere.applyMatrix4(finalMatrix);
 
+        sphere.position.z = 30 + index * (300 / fixations.length);
+
         // Add the sphere to the scene
         sceneRef.current.add(sphere);
 
-        // Set a timer for the duration the mesh should be visible
-        setTimeout(() => {
-          // After the duration, remove the sphere from the scene
-          sceneRef.current.remove(sphere);
-          sphere.geometry.dispose();
-          sphere.material.dispose();
+        // If there's a last sphere, draw a line to the current sphere
+        if (index > 0 && lastSphere) {
+          const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+            lastSphere.position,
+            sphere.position,
+          ]);
+          const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+          const line = new THREE.Line(lineGeometry, lineMaterial);
+          line.name = "line";
+          scene.add(line);
+        }
 
-          // Render the scene again to reflect the changes
-          rendererRef.current.render(sceneRef.current, cameraRef.current);
+        // Animation logic
+        let startTime = Date.now();
+        let endTime = startTime + fixation.duration;
 
-          // Recursively add the next sphere after the current one's duration
-          addFixationSpheres(
-            fixations,
-            offset,
-            matrix,
-            rotationRadians,
-            index + 1
-          );
-        }, fixation.duration); // Convert duration to milliseconds
+        function animate() {
+          let now = Date.now();
+          let elapsed = now - startTime;
+          let fraction = elapsed / 75;
+
+          if (now < endTime) {
+            // Update sphere scale based on the fraction of the duration elapsed
+            // This example linearly scales the sphere from 1 to 2 times its original size
+            let scale = Math.log(1 + fraction); // Adjust this formula as needed
+            sphere.scale.set(scale, scale, scale);
+
+            requestAnimationFrame(animate);
+          } else {
+            // Continue with the next fixation
+            addFixationSpheres(
+              fixations,
+              offset,
+              matrix,
+              rotationRadians,
+              index + 1
+            );
+          }
+        }
+
+        animate();
       }
 
       if (observerId) {
@@ -286,10 +333,10 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
               (item) => item["observer id"].toString() === observerId.toString()
             );
             if (matchingObject) {
-              console.log("Found matching object:", matchingObject);
+              // console.log("Found matching object:", matchingObject);
               // Access and log the orientation from the matching object
               const orientation = matchingObject.condition.orientation;
-              console.log("Orientation of the matching object:", orientation);
+              // console.log("Orientation of the matching object:", orientation);
 
               const offset = matchingObject.condition.offset;
 
@@ -322,7 +369,7 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
 
               // Convert degrees to radians for THREE.js
               let rotationRadians = THREE.MathUtils.degToRad(rotationDegrees);
-              console.log(rotationRadians);
+              // console.log(rotationRadians);
 
               // Read and console log the fixations attribute
               const fixations = matchingObject.fixations;
