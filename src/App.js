@@ -9,6 +9,7 @@ function App() {
   const [selectedFile, setSelectedFile] = useState("");
   const [selectedObserverId, setSelectedObserverId] = useState("");
   const [timeViz, setTimeViz] = useState(false);
+  const [obsPos, setObsPos] = useState(false);
 
   const handleFileSelected = (file) => {
     setSelectedFile(file);
@@ -26,6 +27,10 @@ function App() {
     setTimeViz(true);
   };
 
+  const handleObsPosClick = () => {
+    setObsPos(true);
+  };
+
   return (
     <div className="App">
       <h1>Vizualizácia 3D eye-tracking dát</h1>
@@ -35,12 +40,14 @@ function App() {
       </div>
       {selectedFile && (
         <>
-          <div>Zvolený objekt: {selectedFile}</div>
+          {/* <div>Zvolený objekt: {selectedFile}</div> */}
           <ThreeCanvas
             observerId={selectedObserverId}
             modelFileName={selectedFile}
             timeViz={timeViz}
             setTimeViz={setTimeViz}
+            obsPos={obsPos}
+            setObsPos={setObsPos}
           />
         </>
       )}
@@ -57,11 +64,16 @@ function App() {
       )}
       {selectedObserverId && ( // Only show the observer ID if it is selected
         <>
-          <div>Zvolené ID pozorovateľa: {selectedObserverId}</div>
+          {/* <div>Zvolené ID pozorovateľa: {selectedObserverId}</div> */}
           {/* Conditional button rendering */}
-          <button onClick={handleVisualizationClick}>
-            Vizualizácia v čase
-          </button>
+          <div>
+            <button onClick={handleVisualizationClick}>
+              Vizualizácia v čase
+            </button>
+          </div>
+          <div>
+            <button onClick={handleObsPosClick}>Pozorovateľ</button>
+          </div>
         </>
       )}
     </div>

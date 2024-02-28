@@ -1,41 +1,10 @@
 .App {
   text-align: center;
-  background-color: #ffffff; /* Bright grey */
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: #ffffff;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+body {
+  background-color: #19191e; /* replace with your desired color */
+  color: #e0e0e0;
 }
 
 .canvas-container {
@@ -45,7 +14,26 @@
 }
 
 .three-canvas {
-  width: 500px;
-  height: 500px;
+  width: 250px;
+  height: 250px;
   margin: auto;
 }
+
+select {
+  background-color: #4c2b62; /* replace with your desired color */
+  color: #e0e0e0; /* replace with your desired color for the text */
+}
+
+button {
+  background-color: #4c2b62; /* replace with your desired color */
+  color: #e0e0e0; /* replace with your desired color for the text */
+}
+
+/* Dark Pastel Purple: #5D547A
+Charcoal Grey: #33333D
+Slate Grey: #474B52
+Midnight Blue: #2C3E50
+Burnt Sienna: #8B5A2B
+Dark Teal: #284B63
+Soft Pearl (Text Color): #E0E0E0 
+*/

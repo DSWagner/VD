@@ -3,7 +3,14 @@ import * as THREE from "three";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
+const ThreeCanvas = ({
+  observerId,
+  modelFileName,
+  timeViz,
+  setTimeViz,
+  obsPos,
+  setObsPos,
+}) => {
   const sceneRef = useRef(new THREE.Scene());
   const cameraRef = useRef(
     new THREE.PerspectiveCamera(60, 500 / 500, 0.1, 1000)
@@ -11,8 +18,8 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
   const rendererRef = useRef(new THREE.WebGLRenderer({ antialias: true }));
   const controlsRef = useRef(null);
   const canvasRef = useRef(null);
-  const originalCameraPos = useRef(null);
-  const observerPos = useRef(null);
+  const originalCameraPosRef = useRef(null);
+  const observerPosRef = useRef(null);
 
   useEffect(() => {
     if (!modelFileName) return; // Don't proceed if modelFileName is not provided
@@ -23,6 +30,7 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
     const camera = cameraRef.current;
     const renderer = rendererRef.current;
     renderer.setSize(500, 500);
+    renderer.setClearColor(0x19191e, 1);
 
     // Append the renderer to the canvas div
     canvasRef.current.innerHTML = ""; // Clear the canvas container
@@ -53,7 +61,7 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
       camera.position.copy(cameraPosition);
       camera.lookAt(boundingBoxCenter);
 
-      originalCameraPos.current = camera.position.clone();
+      originalCameraPosRef.current = camera.position.clone();
 
       // Update the controls target to look at the center of the model
       controls.target.copy(boundingBoxCenter);
@@ -102,8 +110,8 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
         // Set the name of the sphere
         observerSph.name = "observer";
         // Set the position of the sphere to the original camera position
-        observerSph.position.copy(originalCameraPos.current);
-        observerPos.current = observerSph.position.clone();
+        observerSph.position.copy(originalCameraPosRef.current);
+        observerPosRef.current = observerSph.position.clone();
         // Add the sphere to the scene
         sceneRef.current.add(observerSph);
 
@@ -261,7 +269,7 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
 
         const fixation = fixations[index];
         const position = fixation.position;
-        const geometry = new THREE.SphereGeometry(3, 32, 32); // Adjust the size as needed
+        const geometry = new THREE.SphereGeometry(5, 32, 32); // Adjust the size as needed
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Green color for visibility
         const sphere = new THREE.Mesh(geometry, material);
 
@@ -277,12 +285,12 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
         const originalPos = sphere.position;
 
         const directionVector = new THREE.Vector3(
-          originalCameraPos.current.x - sphere.position.x,
-          originalCameraPos.current.y - sphere.position.y,
-          originalCameraPos.current.z - sphere.position.z
+          originalCameraPosRef.current.x - sphere.position.x,
+          originalCameraPosRef.current.y - sphere.position.y,
+          originalCameraPosRef.current.z - sphere.position.z
         ).normalize();
 
-        const observerDist = originalPos.distanceTo(observerPos.current);
+        const observerDist = originalPos.distanceTo(observerPosRef.current);
         // Create an arrow helper with the direction vector
         const arrowHelper = new THREE.ArrowHelper(
           directionVector,
@@ -433,6 +441,16 @@ const ThreeCanvas = ({ observerId, modelFileName, timeViz, setTimeViz }) => {
       animate();
     }
   }, [observerId, modelFileName, timeViz, setTimeViz]);
+
+  useEffect(() => {
+    if (obsPos) {
+      // Assuming camera and observerPosRef are defined and accessible in this scope
+      const camera = cameraRef.current;
+      camera.position.copy(observerPosRef.current);
+      // Reset obsPos to false for future use
+      setObsPos(false);
+    }
+  }, [obsPos, setObsPos]);
 
   return (
     <div
