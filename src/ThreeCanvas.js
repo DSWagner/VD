@@ -42,19 +42,39 @@ const ThreeCanvas = ({
       const model = matchingObject.condition.model;
       const material = matchingObject.condition.material;
       const direction = matchingObject.condition.direction;
-      const duration = fixations.reduce((totalDuration, fixation) => {
-        return totalDuration + fixation.duration;
-      }, 0);
-      const minDuration = Math.min(
-        ...fixations.map((fixation) => fixation.duration)
-      );
-      console.log(`Min duration: ${minDuration / 100}s`);
+      const duration = (
+        fixations.reduce((totalDuration, fixation) => {
+          return totalDuration + fixation.duration;
+        }, 0) / 1000
+      ).toFixed(2);
+      const minDuration = (
+        Math.min(...fixations.map((fixation) => fixation.duration)) / 1000
+      ).toFixed(2);
+      const maxDuration = (
+        Math.max(...fixations.map((fixation) => fixation.duration)) / 1000
+      ).toFixed(2);
+      const avgDuration = (duration / fixations.length).toFixed(2);
       console.log(`ID poz.: ${observerId}`);
       console.log(`Model: ${model}`);
       console.log(`Mat: ${material}`);
       console.log(`Uhol: ${direction} (${(direction - 3) * 15}°)`);
-      console.log(`Dĺžka poz.: ${duration / 100}s`);
-      console.log(`Min. čas fix.: ${minDuration}`);
+      console.log(`Dĺžka poz.: ${duration}s`);
+      console.log(`Min. čas fix.: ${minDuration}s`);
+      console.log(`Avg. čas fix.: ${avgDuration}s`);
+      console.log(`Max. čas fix.: ${maxDuration}s`);
+
+      const row = [
+        observerId,
+        model,
+        material,
+        direction,
+        duration,
+        minDuration,
+        avgDuration,
+        maxDuration,
+      ];
+      const tmpTableData = [tableData[0], row];
+      setTableData(tmpTableData);
     }
 
     // Load the STL model
@@ -233,7 +253,7 @@ const ThreeCanvas = ({
       renderer.dispose(); // Dispose of the renderer
       controls.dispose();
     };
-  }, [observerId, modelFileName, tableData, setTableData]); // Depend on modelFileName to re-trigger loading
+  }, [observerId, modelFileName]); // Depend on modelFileName to re-trigger loading
 
   useEffect(() => {
     if (timeViz) {

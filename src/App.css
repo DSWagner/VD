@@ -1,22 +1,29 @@
 .App {
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.header {
+  flex: 1;
+  max-height: 10%; /* Header takes up 10% of the container's height */
+}
+
+.content {
+  flex: 9; /* Content takes the remaining space */
+  display: flex;
+}
+
+.column {
+  flex: 1; /* Each column takes equal width */
+  padding: 20px; /* Example padding */
+  border-right: 0px solid #dee2e6; /* Example border */
 }
 
 body {
   background-color: #19191e; /* replace with your desired color */
   color: #e0e0e0;
-}
-
-.canvas-container {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
-}
-
-.three-canvas {
-  width: 250px;
-  height: 250px;
-  margin: auto;
 }
 
 select {
@@ -40,12 +47,3 @@ button {
   border: 1px solid #e0e0e0;
   padding: 4px;
 }
-
-/* Dark Pastel Purple: #5D547A
-Charcoal Grey: #33333D
-Slate Grey: #474B52
-Midnight Blue: #2C3E50
-Burnt Sienna: #8B5A2B
-Dark Teal: #284B63
-Soft Pearl (Text Color): #E0E0E0 
-*/
