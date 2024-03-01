@@ -10,6 +10,8 @@ const ThreeCanvas = ({
   setTimeViz,
   obsPos,
   setObsPos,
+  tableData,
+  setTableData,
 }) => {
   const sceneRef = useRef(new THREE.Scene());
   const cameraRef = useRef(
@@ -35,6 +37,25 @@ const ThreeCanvas = ({
     // Append the renderer to the canvas div
     canvasRef.current.innerHTML = ""; // Clear the canvas container
     canvasRef.current.appendChild(renderer.domElement);
+
+    function getTableData(matchingObject, fixations) {
+      const model = matchingObject.condition.model;
+      const material = matchingObject.condition.material;
+      const direction = matchingObject.condition.direction;
+      const duration = fixations.reduce((totalDuration, fixation) => {
+        return totalDuration + fixation.duration;
+      }, 0);
+      const minDuration = Math.min(
+        ...fixations.map((fixation) => fixation.duration)
+      );
+      console.log(`Min duration: ${minDuration / 100}s`);
+      console.log(`ID poz.: ${observerId}`);
+      console.log(`Model: ${model}`);
+      console.log(`Mat: ${material}`);
+      console.log(`Uhol: ${direction} (${(direction - 3) * 15}°)`);
+      console.log(`Dĺžka poz.: ${duration / 100}s`);
+      console.log(`Min. čas fix.: ${minDuration}`);
+    }
 
     // Load the STL model
     const loader = new STLLoader();
@@ -175,6 +196,9 @@ const ThreeCanvas = ({
 
               // Read and console log the fixations attribute
               const fixations = matchingObject.fixations;
+
+              getTableData(matchingObject, fixations);
+
               // console.log("Fixations:", fixations);
               addFixationSpheres(fixations, offset, matrix, rotationRadians);
             } else {
@@ -209,7 +233,7 @@ const ThreeCanvas = ({
       renderer.dispose(); // Dispose of the renderer
       controls.dispose();
     };
-  }, [observerId, modelFileName]); // Depend on modelFileName to re-trigger loading
+  }, [observerId, modelFileName, tableData, setTableData]); // Depend on modelFileName to re-trigger loading
 
   useEffect(() => {
     if (timeViz) {

@@ -10,6 +10,18 @@ function App() {
   const [selectedObserverId, setSelectedObserverId] = useState("");
   const [timeViz, setTimeViz] = useState(false);
   const [obsPos, setObsPos] = useState(false);
+  const [tableData, setTableData] = useState([
+    [
+      "ID poz.",
+      "Model",
+      "Mat.",
+      "Uhol",
+      "Dĺžka poz.",
+      "Min. čas fix.",
+      "Pr. čas fix.",
+      "Max. čas fix.",
+    ],
+  ]);
 
   const handleFileSelected = (file) => {
     setSelectedFile(file);
@@ -48,6 +60,8 @@ function App() {
             setTimeViz={setTimeViz}
             obsPos={obsPos}
             setObsPos={setObsPos}
+            tableData={tableData}
+            setTableData={setTableData}
           />
         </>
       )}
@@ -73,6 +87,19 @@ function App() {
           </div>
           <div>
             <button onClick={handleObsPosClick}>Pozorovateľ</button>
+          </div>
+          <div>
+            <table className="centered-table">
+              <tbody>
+                {tableData.map((rowData, rowIndex) => (
+                  <tr key={rowIndex}>
+                    {rowData.map((cellData, cellIndex) => (
+                      <td key={cellIndex}>{cellData}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </>
       )}
