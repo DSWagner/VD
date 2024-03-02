@@ -10,6 +10,18 @@ function App() {
   const [selectedObserverId, setSelectedObserverId] = useState("");
   const [timeViz, setTimeViz] = useState(false);
   const [obsPos, setObsPos] = useState(false);
+  const [tableData, setTableData] = useState([
+    [
+      "ID poz.",
+      "Model",
+      "Mat.",
+      "Uhol",
+      "Dĺžka poz.",
+      "Min. čas fix.",
+      "Pr. čas fix.",
+      "Max. čas fix.",
+    ],
+  ]);
 
   const handleFileSelected = (file) => {
     setSelectedFile(file);
@@ -32,16 +44,26 @@ function App() {
   };
 
   return (
-    // <div className="App"></div>
     <div className="App" className="container" style={{margin: 0}}>
-      <div className="row">
+      <div className="row" className="header">
         <h1>Vizualizácia 3D eye-tracking dát</h1>
-        <div>Zvoľte si 3D objekt na vizualizáciu</div>
       </div>
 
       <div className="row"> 
         <div className="col-3">
-          {/* Statistiky sem */}
+          <div>
+            <table className="centered-table">
+              <tbody>
+                {tableData.map((rowData, rowIndex) => (
+                  <tr key={rowIndex}>
+                    {rowData.map((cellData, cellIndex) => (
+                      <td key={cellIndex}>{cellData}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div className="col-6">
@@ -62,6 +84,7 @@ function App() {
 
         <div className="col-3">
           <div className="row">
+          <div>Zvoľte si 3D objekt na vizualizáciu</div>
             <div>
               <ModelSelector onFileSelected={handleFileSelected} />
             </div>
