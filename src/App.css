@@ -3,8 +3,8 @@
 }
 
 body {
-  background-color: #19191e; /* replace with your desired color */
-  color: #e0e0e0;
+  background-color: #19191e !important;/* replace with your desired color */
+  color: #e0e0e0 !important;
 }
 
 .canvas-container {
