@@ -44,12 +44,13 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <div class="header">
-        <h2>Vizualizácia 3D eye-tracking dát</h2>
+    <div className="App container" style={{margin: 0}}>
+      <div className="row header">
+        <h1>Vizualizácia 3D eye-tracking dát</h1>
       </div>
-      <div class="content">
-        <div class="column">
+
+      <div className="row"> 
+        <div className="col-3">
           <div>
             <table className="centered-table">
               <tbody>
@@ -64,11 +65,8 @@ function App() {
             </table>
           </div>
         </div>
-        <div class="column">
-          <div>Zvoľte si 3D objekt na vizualizáciu</div>
-          <div>
-            <ModelSelector onFileSelected={handleFileSelected} />
-          </div>
+
+        <div className="col-6">
           {selectedFile && (
             <>
               {/* <div>Zvolený objekt: {selectedFile}</div> */}
@@ -85,30 +83,41 @@ function App() {
             </>
           )}
         </div>
-        <div class="column">
-          {selectedFile && ( // Only show the observer selector if a file is selected
-            <>
-              <div>Zvoľte si ID pozorovateľa</div>
-              <div>
-                <ObserverSelector
-                  onObserverSelected={handleObserverSelected}
-                  modelFileName={selectedFile}
-                />
-              </div>
-            </>
-          )}
-          {selectedObserverId && ( // Only show the observer ID if it is selected
-            <>
-              <div>
-                <button onClick={handleVisualizationClick}>
-                  Vizualizácia v čase
-                </button>
-              </div>
-              <div>
-                <button onClick={handleObsPosClick}>Pozorovateľ</button>
-              </div>
-            </>
-          )}
+
+        <div className="col-3">
+          <div className="row">
+          <div>Zvoľte si 3D objekt na vizualizáciu</div>
+            <div>
+              <ModelSelector onFileSelected={handleFileSelected} />
+            </div>
+          </div>
+          <div className="row">
+            {selectedFile && ( // Only show the observer selector if a file is selected
+              <>
+                <div>Zvoľte si ID pozorovateľa</div>
+                <div>
+                  <ObserverSelector
+                    onObserverSelected={handleObserverSelected}
+                    modelFileName={selectedFile}
+                  />
+                </div>
+              </>
+            )}
+            {selectedObserverId && ( // Only show the observer ID if it is selected
+              <>
+                {/* <div>Zvolené ID pozorovateľa: {selectedObserverId}</div> */}
+                {/* Conditional button rendering */}
+                <div>
+                  <button onClick={handleVisualizationClick}>
+                    Vizualizácia v čase
+                  </button>
+                </div>
+                <div>
+                  <button onClick={handleObsPosClick}>Pozorovateľ</button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
