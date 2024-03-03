@@ -44,8 +44,8 @@ function App() {
   };
 
   return (
-    <div className="App" className="container" style={{margin: 0}}>
-      <div className="row" className="header">
+    <div className="App container" style={{margin: 0}}>
+      <div className="row header">
         <h1>Vizualizácia 3D eye-tracking dát</h1>
       </div>
 
@@ -77,6 +77,8 @@ function App() {
                 setTimeViz={setTimeViz}
                 obsPos={obsPos}
                 setObsPos={setObsPos}
+                tableData={tableData}
+                setTableData={setTableData}
               />
             </>
           )}

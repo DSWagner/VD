@@ -73,6 +73,7 @@ const ThreeCanvas = ({
         avgDuration,
         maxDuration,
       ];
+      console.log(tableData);
       const tmpTableData = [tableData[0], row];
       setTableData(tmpTableData);
     }
@@ -216,7 +217,8 @@ const ThreeCanvas = ({
 
               // Read and console log the fixations attribute
               const fixations = matchingObject.fixations;
-
+              // console.log(matchingObject);
+              // console.log(fixations);
               getTableData(matchingObject, fixations);
 
               // console.log("Fixations:", fixations);
@@ -253,6 +255,7 @@ const ThreeCanvas = ({
       renderer.dispose(); // Dispose of the renderer
       controls.dispose();
     };
+  // }, [observerId, modelFileName, tableData, setTableData]); // Depend on modelFileName to re-trigger loading
   }, [observerId, modelFileName]); // Depend on modelFileName to re-trigger loading
 
   useEffect(() => {
