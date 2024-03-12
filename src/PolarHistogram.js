@@ -113,7 +113,7 @@ const PolarHistogram = ({ modelFileName }) => {
               ticksuffix: "s",
               angle: 0,
               gridcolor: "#e0e0e0",
-              title: "Average Duration of Fixations",
+              title: "Priemerná dĺžka fixácií",
             },
             angularaxis: {
               direction: "clockwise",
@@ -133,7 +133,7 @@ const PolarHistogram = ({ modelFileName }) => {
           },
           annotations: [
             {
-              text: "Direction", // The title you want to display
+              text: "Smer", // The title you want to display
               showarrow: false,
               xref: "paper",
               yref: "paper",

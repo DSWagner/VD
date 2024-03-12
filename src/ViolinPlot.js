@@ -91,12 +91,12 @@ const ViolinPlot = ({ modelFileName }) => {
             tickmode: "array",
             tickvals: violin_data.map((item, index) => index), // Assuming you want to display all violin plots
             ticktext: violin_data.map((item) => item.name), // The names of your violin plots
-            title: "Direction",
+            title: "Smer",
             // gridcolor: "#e0e0e0",
           },
           yaxis: {
             zeroline: false,
-            title: "Avg. Fixation Duration/Observer (s)",
+            title: "Priemerná dĺžka fixácií na pozorovateľa (s)",
             // gridcolor: "#e0e0e0",
           },
           paper_bgcolor: "#19191e", // Example background color
