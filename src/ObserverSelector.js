@@ -20,20 +20,25 @@ const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
   }, [modelFileName, index]); // Include index in the dependency array
 
   return (
-    <select
-      onChange={(e) => onObserverSelected(e.target.value)}
-      defaultValue=""
-      key={modelFileName} // Add this line
-    >
-      <option value="" disabled>
-        Select Observer ID
-      </option>
-      {observerIds.map((id) => (
-        <option key={id} value={id}>
-          {id}
+    <div>
+      <label htmlFor={`observerSelector${index}`}>
+        Smer: {(index - 3) * 15}° :
+      </label>
+      <select
+        onChange={(e) => onObserverSelected(e.target.value)}
+        defaultValue=""
+        key={modelFileName} // Add this line
+      >
+        <option value="" disabled>
+          Select Observer ID
         </option>
-      ))}
-    </select>
+        {observerIds.map((id) => (
+          <option key={id} value={id}>
+            {id}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 };
 

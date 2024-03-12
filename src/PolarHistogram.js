@@ -112,7 +112,7 @@ const PolarHistogram = ({ modelFileName }) => {
             radialaxis: {
               ticksuffix: "s",
               angle: 0,
-              gridcolor: "#e0e0e0",
+              gridcolor: "#19191e",
               title: "Priemerná dĺžka fixácií",
             },
             angularaxis: {
@@ -120,7 +120,7 @@ const PolarHistogram = ({ modelFileName }) => {
               tickmode: "array",
               tickvals: [315, 330, 345, 0, 15, 30, 45],
               ticktext: ["-45°", "-30°", "-15°", "0°", "15°", "30°", "45°"],
-              gridcolor: "#e0e0e0",
+              gridcolor: "#19191e",
             },
             bgcolor: "#19191e",
           },

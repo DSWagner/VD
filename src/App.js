@@ -119,6 +119,7 @@ function App() {
                   <ObserverSelector
                     onObserverSelected={handleObserverSelected}
                     modelFileName={selectedFile}
+                    index={0}
                   />
                   <div>Zvoľte si ID pozorovateľov</div>
                   <ObserverSelector
