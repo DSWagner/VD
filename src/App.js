@@ -4,6 +4,8 @@ import "./App.css";
 import ModelSelector from "./ModelSelector";
 import ObserverSelector from "./ObserverSelector";
 import ThreeCanvas from "./ThreeCanvas";
+import ViolinPlot from "./ViolinPlot";
+import PolarHistogram from "./PolarHistogram";
 
 function App() {
   const [selectedFile, setSelectedFile] = useState("");
@@ -44,13 +46,13 @@ function App() {
   };
 
   return (
-    <div className="App container" style={{margin: 0}}>
+    <div className="App container" style={{ margin: 0 }}>
       <div className="row header">
         <h1>Vizualizácia 3D eye-tracking dát</h1>
       </div>
 
-      <div className="row"> 
-        <div className="col-3">
+      <div className="row">
+        <div className="col-4">
           <div>
             <table className="centered-table">
               <tbody>
@@ -63,10 +65,17 @@ function App() {
                 ))}
               </tbody>
             </table>
+            {/* Render the ViolinPlot component here */}
+            {selectedFile && (
+              <>
+                <ViolinPlot modelFileName={selectedFile} />
+                <PolarHistogram modelFileName={selectedFile} />
+              </>
+            )}
           </div>
         </div>
 
-        <div className="col-6">
+        <div className="col-5">
           {selectedFile && (
             <>
               {/* <div>Zvolený objekt: {selectedFile}</div> */}
@@ -86,7 +95,7 @@ function App() {
 
         <div className="col-3">
           <div className="row">
-          <div>Zvoľte si 3D objekt na vizualizáciu</div>
+            <div>Zvoľte si 3D objekt na vizualizáciu</div>
             <div>
               <ModelSelector onFileSelected={handleFileSelected} />
             </div>
