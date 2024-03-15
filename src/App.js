@@ -6,6 +6,7 @@ import ObserverSelector from "./ObserverSelector";
 import ThreeCanvas from "./ThreeCanvas";
 import ViolinPlot from "./ViolinPlot";
 import PolarHistogram from "./PolarHistogram";
+import StatTable from "./StatTable";
 
 function App() {
   const [selectedFile, setSelectedFile] = useState("");
@@ -20,7 +21,7 @@ function App() {
       "ID poz.",
       "Model",
       "Mat.",
-      "Uhol",
+      "Smer",
       "Dĺžka poz.",
       "Min. čas fix.",
       "Pr. čas fix.",
@@ -31,6 +32,7 @@ function App() {
   const handleFileSelected = (file) => {
     setSelectedFile(file);
     setSelectedObserverIds(Array(7).fill(""));
+    setTableData([tableData[0]]);
     setSelectedObserverId(""); // Reset observer ID when a new file is selected
   };
 
@@ -47,8 +49,6 @@ function App() {
 
   // Handler for the visualization button
   const handleVisualizationClick = () => {
-    // Define what should happen when the button is clicked
-    // This could be updating state, calling a function, etc.
     setTimeViz(true);
   };
 
@@ -65,18 +65,14 @@ function App() {
       <div className="row">
         <div className="col-4">
           <div>
-            <table className="centered-table">
-              <tbody>
-                {tableData.map((rowData, rowIndex) => (
-                  <tr key={rowIndex}>
-                    {rowData.map((cellData, cellIndex) => (
-                      <td key={cellIndex}>{cellData}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {/* Render the ViolinPlot component here */}
+            {selectedFile && (
+              <StatTable
+                modelFileName={selectedFile}
+                selectedObserverIds={selectedObserverIds}
+                tableData={tableData}
+                setTableData={setTableData}
+              />
+            )}
             {selectedFile && (
               <>
                 <ViolinPlot modelFileName={selectedFile} />
@@ -134,14 +130,14 @@ function App() {
                       handleObserversSelected(observerId, 1)
                     }
                     modelFileName={selectedFile}
-                    index={0}
+                    index={1}
                   />
                   <ObserverSelector
                     onObserverSelected={(observerId) =>
                       handleObserversSelected(observerId, 2)
                     }
                     modelFileName={selectedFile}
-                    index={1}
+                    index={2}
                   />
                   <ObserverSelector
                     onObserverSelected={(observerId) =>

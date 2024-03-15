@@ -1,10 +1,14 @@
 // PolarHistogram.js
 import React, { useEffect } from "react";
 
-const StatTable = ({ modelFileName }) => {
+const StatTable = ({
+  modelFileName,
+  selectedObserverIds,
+  tableData,
+  setTableData,
+}) => {
   useEffect(() => {
     async function fetchJsonData(modelFileName) {
-      console.log(modelFileName);
       // Replace the .stl extension with .json
       const jsonFileName = modelFileName.replace(".stl", ".json");
       // Construct the path to the JSON file
@@ -31,16 +35,84 @@ const StatTable = ({ modelFileName }) => {
     const fetchData = async () => {
       const jsonData = await fetchJsonData(modelFileName);
       if (jsonData) {
-        console.log(jsonData);
+        // Iterate through each object in jsonData
+        let tmpTableData = [tableData[0]];
+        jsonData.forEach((observer) => {
+          // Check if the item has the attribute "observer id" and if it's included in selectedObserverIds
+          if (
+            observer["observer id"].toString() &&
+            selectedObserverIds.includes(observer["observer id"].toString())
+          ) {
+            // Print the "observer id"
+            console.log(observer["observer id"]);
+
+            const model = observer.condition.model;
+            const material = observer.condition.material;
+            const direction = `${(observer.condition.direction - 3) * 15}°`;
+            const fixations = observer["fixations"];
+            const duration = (
+              fixations.reduce((totalDuration, fixation) => {
+                return totalDuration + fixation.duration;
+              }, 0) / 1000
+            ).toFixed(2);
+            const minDuration = (
+              Math.min(...fixations.map((fixation) => fixation.duration)) / 1000
+            ).toFixed(2);
+            const maxDuration = (
+              Math.max(...fixations.map((fixation) => fixation.duration)) / 1000
+            ).toFixed(2);
+            const avgDuration = (duration / fixations.length).toFixed(2);
+            // console.log(`ID poz.: ${observer["observer id"]}`);
+            // console.log(`Model: ${model}`);
+            // console.log(`Mat: ${material}`);
+            // console.log(`Uhol: ${direction} (${(direction - 3) * 15}°)`);
+            // console.log(`Dĺžka poz.: ${duration}s`);
+            // console.log(`Min. čas fix.: ${minDuration}s`);
+            // console.log(`Avg. čas fix.: ${avgDuration}s`);
+            // console.log(`Max. čas fix.: ${maxDuration}s`);
+
+            const row = [
+              observer["observer id"],
+              model,
+              material,
+              direction,
+              duration,
+              minDuration,
+              avgDuration,
+              maxDuration,
+            ];
+            console.log(row);
+            // console.log(tableData);
+            tmpTableData = [...tmpTableData, row];
+            tmpTableData.sort((a, b) => {
+              // Assuming direction is a number. If it's a string, you might need to parse it as a number first.
+              return parseFloat(a[3]) - parseFloat(b[3]);
+            });
+            console.log(tmpTableData);
+            setTableData(tmpTableData);
+          }
+        });
       } else {
         console.log("Failed to fetch JSON data.");
       }
     };
 
     fetchData();
+  }, [modelFileName, selectedObserverIds]); // Re-run the effect if data changes
 
-    // Plot.newPlot("polarHistogram", plotData, layout);
-  }, [modelFileName]); // Re-run the effect if data changes
+  return (
+    <table className="centered-table">
+      <tbody>
+        {tableData.map((rowData, rowIndex) => (
+          <tr key={rowIndex}>
+            {rowData.map((cellData, cellIndex) => (
+              <td key={cellIndex}>{cellData}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 };
 
 export default StatTable;
