@@ -28,6 +28,9 @@ function App() {
       "Max. čas fix.",
     ],
   ]);
+  const [isExpandedTable, setIsExpandedTable] = useState(false);
+  const [isExpandedViolin, setIsExpandedViolin] = useState(false);
+  const [isExpandedPolar, setIsExpandedPolar] = useState(false);
 
   const handleFileSelected = (file) => {
     setSelectedFile(file);
@@ -56,6 +59,18 @@ function App() {
     setObsPos(true);
   };
 
+  const handleExpandTable = () => {
+    setIsExpandedTable(!isExpandedTable);
+  };
+
+  const handleExpandViolin = () => {
+    setIsExpandedViolin(!isExpandedViolin);
+  };
+
+  const handleExpandPolar = () => {
+    setIsExpandedPolar(!isExpandedPolar);
+  };
+
   return (
     <div className="App container" style={{ margin: 0 }}>
       <div className="row header">
@@ -64,28 +79,38 @@ function App() {
 
       <div className="row">
         <div className="col-4">
-          <div>
-            {selectedFile && (
-              <StatTable
-                modelFileName={selectedFile}
-                selectedObserverIds={selectedObserverIds}
-                tableData={tableData}
-                setTableData={setTableData}
-              />
-            )}
-            {selectedFile && (
-              <>
-                <ViolinPlot modelFileName={selectedFile} />
-                <PolarHistogram modelFileName={selectedFile} />
-              </>
-            )}
-          </div>
+          {selectedFile && (
+            <>
+              <div>
+                <button onClick={handleExpandTable}>Tabulka</button>
+                {isExpandedTable && (
+                  <StatTable
+                    modelFileName={selectedFile}
+                    selectedObserverIds={selectedObserverIds}
+                    tableData={tableData}
+                    setTableData={setTableData}
+                  />
+                )}
+              </div>
+              <div>
+                <button onClick={handleExpandViolin}>Huslový graf</button>
+                {isExpandedViolin && (
+                  <ViolinPlot modelFileName={selectedFile} />
+                )}
+              </div>
+              <div>
+                <button onClick={handleExpandPolar}>Polárny histogram</button>
+                {isExpandedPolar && (
+                  <PolarHistogram modelFileName={selectedFile} />
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="col-5">
           {selectedFile && (
             <>
-              {/* <div>Zvolený objekt: {selectedFile}</div> */}
               <ThreeCanvas
                 observerId={selectedObserverId}
                 modelFileName={selectedFile}
