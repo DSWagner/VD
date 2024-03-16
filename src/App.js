@@ -2,11 +2,12 @@
 import React, { useState } from "react";
 import "./App.css";
 import ModelSelector from "./ModelSelector";
-import ObserverSelector from "./ObserverSelector";
 import ThreeCanvas from "./ThreeCanvas";
+import ThreeCanvasNew from "./ThreeCanvasNew";
 import ViolinPlot from "./ViolinPlot";
 import PolarHistogram from "./PolarHistogram";
 import StatTable from "./StatTable";
+import ParametersTab from "./ParametersTab";
 
 function App() {
   const [selectedFile, setSelectedFile] = useState("");
@@ -28,6 +29,7 @@ function App() {
       "Max. čas fix.",
     ],
   ]);
+  const [cameraPos, setCameraPos] = useState();
   const [isExpandedTable, setIsExpandedTable] = useState(false);
   const [isExpandedViolin, setIsExpandedViolin] = useState(false);
   const [isExpandedPolar, setIsExpandedPolar] = useState(false);
@@ -41,13 +43,6 @@ function App() {
 
   const handleObserverSelected = (observerId) => {
     setSelectedObserverId(observerId);
-  };
-
-  const handleObserversSelected = (observerId, index) => {
-    const newSelectedObserverIds = [...selectedObserverIds];
-    newSelectedObserverIds[index] = observerId;
-    setSelectedObserverIds(newSelectedObserverIds);
-    console.log(newSelectedObserverIds);
   };
 
   // Handler for the visualization button
@@ -72,7 +67,7 @@ function App() {
   };
 
   return (
-    <div className="App container" style={{ margin: 0 }}>
+    <div className="App container-fluid" style={{ margin: 0 }}>
       <div className="row header">
         <h1>Vizualizácia 3D eye-tracking dát</h1>
       </div>
@@ -111,6 +106,11 @@ function App() {
         <div className="col-5">
           {selectedFile && (
             <>
+              <ThreeCanvasNew
+                modelFileName={selectedFile}
+                observerIds={selectedObserverIds}
+                cameraPos={cameraPos}
+              />
               <ThreeCanvas
                 observerId={selectedObserverId}
                 modelFileName={selectedFile}
@@ -135,64 +135,13 @@ function App() {
           <div className="row">
             {selectedFile && ( // Only show the observer selector if a file is selected
               <>
-                <div>Zvoľte si ID pozorovateľa</div>
-                <div>
-                  <ObserverSelector
-                    onObserverSelected={handleObserverSelected}
-                    modelFileName={selectedFile}
-                    index={0}
-                  />
-                  <div>Zvoľte si ID pozorovateľov</div>
-                  <ObserverSelector
-                    onObserverSelected={(observerId) =>
-                      handleObserversSelected(observerId, 0)
-                    }
-                    modelFileName={selectedFile}
-                    index={0}
-                  />
-                  <ObserverSelector
-                    onObserverSelected={(observerId) =>
-                      handleObserversSelected(observerId, 1)
-                    }
-                    modelFileName={selectedFile}
-                    index={1}
-                  />
-                  <ObserverSelector
-                    onObserverSelected={(observerId) =>
-                      handleObserversSelected(observerId, 2)
-                    }
-                    modelFileName={selectedFile}
-                    index={2}
-                  />
-                  <ObserverSelector
-                    onObserverSelected={(observerId) =>
-                      handleObserversSelected(observerId, 3)
-                    }
-                    modelFileName={selectedFile}
-                    index={3}
-                  />
-                  <ObserverSelector
-                    onObserverSelected={(observerId) =>
-                      handleObserversSelected(observerId, 4)
-                    }
-                    modelFileName={selectedFile}
-                    index={4}
-                  />
-                  <ObserverSelector
-                    onObserverSelected={(observerId) =>
-                      handleObserversSelected(observerId, 5)
-                    }
-                    modelFileName={selectedFile}
-                    index={5}
-                  />
-                  <ObserverSelector
-                    onObserverSelected={(observerId) =>
-                      handleObserversSelected(observerId, 6)
-                    }
-                    modelFileName={selectedFile}
-                    index={6}
-                  />
-                </div>
+                <div>Zvoľte si ID pozorovateľov</div>
+                <ParametersTab
+                  modelFileName={selectedFile}
+                  observerIds={selectedObserverIds}
+                  setObserverIds={setSelectedObserverIds}
+                  setCameraPos={setCameraPos}
+                />
               </>
             )}
             {selectedObserverId && ( // Only show the observer ID if it is selected
