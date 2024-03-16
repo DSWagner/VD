@@ -33,11 +33,14 @@ function App() {
   const [isExpandedTable, setIsExpandedTable] = useState(false);
   const [isExpandedViolin, setIsExpandedViolin] = useState(false);
   const [isExpandedPolar, setIsExpandedPolar] = useState(false);
+  const [statVizFlags, setStatVizFlags] = useState(Array(7).fill(false));
 
   const handleFileSelected = (file) => {
     setSelectedFile(file);
     setSelectedObserverIds(Array(7).fill(""));
     setTableData([tableData[0]]);
+    setStatVizFlags(Array(7).fill(false));
+    setCameraPos();
     setSelectedObserverId(""); // Reset observer ID when a new file is selected
   };
 
@@ -110,6 +113,7 @@ function App() {
                 modelFileName={selectedFile}
                 observerIds={selectedObserverIds}
                 cameraPos={cameraPos}
+                statVizFlags={statVizFlags}
               />
               <ThreeCanvas
                 observerId={selectedObserverId}
@@ -141,6 +145,8 @@ function App() {
                   observerIds={selectedObserverIds}
                   setObserverIds={setSelectedObserverIds}
                   setCameraPos={setCameraPos}
+                  statVizFlags={statVizFlags}
+                  setStatVizFlags={setStatVizFlags}
                 />
               </>
             )}

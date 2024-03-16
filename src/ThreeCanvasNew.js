@@ -8,6 +8,7 @@ const ThreeCanvasNew = ({
   modelFileName,
   observerIds,
   cameraPos,
+  statVizFlags,
   //   timeViz,
   //   setTimeViz,
   //   obsPos,
@@ -105,6 +106,17 @@ const ThreeCanvasNew = ({
       if (observerId) {
         console.log(observerId);
 
+        // Create a shallow copy of scene.children to safely iterate over
+        const childrenCopy = scene.children.slice();
+
+        childrenCopy.forEach((child) => {
+          // Assuming statVizFlags is an array with the same length as the number of fixation elements
+          if (child.name === `fixation-${index}`) {
+            console.log(index);
+            scene.remove(child); // Remove the child from the scene
+          }
+        });
+
         // Calculate the rotation angle in radians
         const degrees = (index - 3) * 15;
         const radians = degrees * (Math.PI / 180);
@@ -132,12 +144,103 @@ const ThreeCanvasNew = ({
         sphere.position.copy(rotatedPosition);
         sphere.name = `direction-${index}`;
         scene.add(sphere);
+
+        const jsonFileName = modelFileName.replace(".stl", ".json");
+        const jsonFilePath = `${process.env.PUBLIC_URL}/Dataset/gazePerObject/${jsonFileName}`;
+
+        function addFixationSpheres(fixations, offset, matrix, direction) {
+          // Invert the matrix to apply the rotation in the opposite direction
+          const invertedMatrix = matrix.clone().invert();
+
+          fixations.forEach((fixation) => {
+            const position = fixation.position;
+            const geometry = new THREE.SphereGeometry(5, 32, 32); // Adjust the size as needed
+            const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Red color for visibility
+            const sphere = new THREE.Mesh(geometry, material);
+
+            sphere.position.x = position[0] - offset[0];
+            sphere.position.y = position[1] - offset[1];
+            sphere.position.z = position[2] - offset[2];
+
+            // Apply the inverted matrix to each sphere
+            sphere.applyMatrix4(invertedMatrix);
+
+            sphere.name = `fixation-${direction}`;
+            console.log(sphere.name);
+
+            sphere.visible = statVizFlags[index];
+            console.log(sphere.visible);
+
+            // Add the sphere to the scene
+            sceneRef.current.add(sphere);
+          });
+        }
+
+        // Fetch the JSON file
+        fetch(jsonFilePath)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            // Assuming 'data' is the array of objects
+            const matchingObject = data.find(
+              (item) => item["observer id"].toString() === observerId.toString()
+            );
+            if (matchingObject) {
+              // Access and log the orientation from the matching object
+              const orientation = matchingObject.condition.orientation;
+
+              const offset = matchingObject.condition.offset;
+
+              // Creating a Matrix4 from the 3x3 rotation matrix
+              const matrix = new THREE.Matrix4();
+              matrix.set(
+                orientation[0],
+                orientation[1],
+                orientation[2],
+                0,
+                orientation[3],
+                orientation[4],
+                orientation[5],
+                0,
+                orientation[6],
+                orientation[7],
+                orientation[8],
+                0,
+                0,
+                0,
+                0,
+                1
+              );
+
+              // Define direction and calculate rotation in degrees
+              const direction = matchingObject.condition.direction;
+              console.log("Direction of the matching object:", direction);
+
+              // Read and console log the fixations attribute
+              const fixations = matchingObject.fixations;
+              // console.log(matchingObject);
+              // console.log(fixations);
+
+              // console.log("Fixations:", fixations);
+              addFixationSpheres(fixations, offset, matrix, index);
+            } else {
+              console.log(
+                "No matching object found for observer ID:",
+                observerId
+              );
+            }
+          })
+          .catch((error) => console.error("Error loading JSON file:", error));
       }
     });
   }, [modelFileName, observerIds]); // Depend on modelFileName to re-trigger loading
 
   useEffect(() => {
-    if (!modelFileName) return; // Don't proceed if modelFileName is not provided
+    if (!modelFileName || cameraPos == null) return; // Don't proceed if modelFileName is not provided
 
     // Initialize scene, camera, and renderer
     const scene = sceneRef.current;
@@ -159,6 +262,32 @@ const ThreeCanvasNew = ({
       console.log("No child found with the name:", targetName);
     }
   }, [modelFileName, cameraPos]); // Depend on modelFileName to re-trigger loading
+
+  useEffect(() => {
+    if (!modelFileName) return; // Don't proceed if modelFileName is not provided
+
+    // console.log(statVizFlags);
+
+    // Initialize scene, camera, and renderer
+    const scene = sceneRef.current;
+
+    // console.log(statVizFlags);
+    // Loop through each statVizFlag
+    statVizFlags.forEach((isVisible, index) => {
+      // console.log(isVisible);
+      // Construct the name to look for
+      const targetName = `fixation-${index}`;
+      // console.log(targetName);
+
+      // Find children with the matching name
+      scene.children.forEach((child) => {
+        if (child.name === targetName) {
+          // Set visibility based on the corresponding statVizFlag
+          child.visible = isVisible;
+        }
+      });
+    });
+  }, [modelFileName, statVizFlags]); // Depend on modelFileName to re-trigger loading
 
   return (
     <div

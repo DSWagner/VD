@@ -7,7 +7,16 @@ const ParametersTab = ({
   observerIds,
   setObserverIds,
   setCameraPos,
+  statVizFlags,
+  setStatVizFlags,
 }) => {
+  useEffect(() => {
+    if (!modelFileName) return;
+    // Reset statVizFlags to false for each observerId when modelFileName changes
+    const resetFlags = observerIds.map(() => false);
+    setStatVizFlags(resetFlags);
+  }, [modelFileName]);
+
   const handleObserversSelected = (observerId, index) => {
     const newObserverIds = [...observerIds];
     newObserverIds[index] = observerId;
@@ -16,9 +25,12 @@ const ParametersTab = ({
   };
 
   const handleStatVizCheckbox = (flag, index) => {
-    console.log("Static Viz");
-    console.log(flag);
-    console.log(index);
+    // Update statVizFlags in an immutable way
+    const updatedFlags = statVizFlags.map((item, idx) =>
+      idx === index ? flag : item
+    );
+    // console.log(updatedFlags);
+    setStatVizFlags(updatedFlags);
   };
 
   const handleDynaVizCheckbox = (flag, index) => {
@@ -47,6 +59,7 @@ const ParametersTab = ({
           <> SV </>
           <input
             type="checkbox"
+            checked={statVizFlags[index]}
             onChange={(e) => handleStatVizCheckbox(e.target.checked, index)}
           />
           <> DV </>
