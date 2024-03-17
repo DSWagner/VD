@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import Plot from "plotly.js-dist-min";
+import colors from "./colors.json";
 
 const ViolinPlot = ({ modelFileName }) => {
   useEffect(() => {
@@ -73,7 +74,7 @@ const ViolinPlot = ({ modelFileName }) => {
         const violin_data = extractViolinPlotData(jsonData);
         // console.log(violin_data);
 
-        const plotData = violin_data.map((item) => ({
+        const plotData = violin_data.map((item, index) => ({
           type: "violin",
           y: item.values,
           name: item.name,
@@ -82,6 +83,9 @@ const ViolinPlot = ({ modelFileName }) => {
           },
           meanline: {
             visible: true,
+          },
+          marker: {
+            color: colors.directions[index % colors.directions.length], // Adjusted to access the 'directions' array
           },
         }));
 

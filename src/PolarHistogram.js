@@ -1,17 +1,20 @@
 // PolarHistogram.js
 import React, { useEffect } from "react";
 import Plot from "plotly.js-dist-min";
+import colors from "./colors.json";
 
 const PolarHistogram = ({ modelFileName }) => {
   useEffect(() => {
     const processData = (data) => {
       // Process your data here to fit the polar histogram requirements
       // This is a placeholder function, adapt it based on your actual data structure
-      return data.map((item) => ({
+      console.log(data);
+      return data.map((item, index) => ({
         r: item.values,
         theta: item.directions,
         type: "barpolar",
         marker: {
+          color: colors["directions"], // Use the modulo operator to loop through colors
           line: {
             color: "#e0e0e0", // This sets the outline color to black
             width: 1, // This sets the outline width. Adjust as needed.
@@ -64,20 +67,26 @@ const PolarHistogram = ({ modelFileName }) => {
         directionGroups[direction].push(averageDuration);
       });
 
+      // Convert directionGroups object to an array of [key, value] pairs
+      const directionGroupsArray = Object.entries(directionGroups);
+
+      // Sort the array based on the numeric value of the keys (directions)
+      directionGroupsArray.sort((a, b) => Number(a[0]) - Number(b[0]));
+
       // Initialize arrays for values and directions
       const values = [];
       const directions = [];
 
-      // Populate the arrays
-      Object.keys(directionGroups).forEach((direction) => {
-        const total = directionGroups[direction].reduce(
-          (sum, curr) => sum + curr,
-          0
-        );
-        const average = total / directionGroups[direction].length;
+      // Populate the arrays using the sorted directionGroupsArray
+      directionGroupsArray.forEach(([direction, group]) => {
+        const total = group.reduce((sum, curr) => sum + curr, 0);
+        const average = total / group.length;
         values.push(average);
         directions.push(direction);
       });
+
+      console.log(values);
+      console.log(directions);
 
       // Return the new structure
       return [

@@ -2,28 +2,20 @@ import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import colors from "./colors.json";
 
 const ThreeCanvasNew = ({
-  //   observerId,
   modelFileName,
   observerIds,
   cameraPos,
   statVizFlags,
-  //   timeViz,
-  //   setTimeViz,
-  //   obsPos,
-  //   setObsPos,
 }) => {
   const sceneRef = useRef(new THREE.Scene());
-  const cameraRef = useRef(
-    new THREE.PerspectiveCamera(60, 500 / 500, 0.1, 1000)
-  );
+  const cameraRef = useRef(new THREE.PerspectiveCamera(60, 1, 0.1, 1000));
   const rendererRef = useRef(new THREE.WebGLRenderer({ antialias: true }));
   const controlsRef = useRef(null);
   const canvasRef = useRef(null);
   const cameraPosRef = useRef(null);
-  //   const originalCameraPosRef = useRef(null);
-  //   const observerPosRef = useRef(null);
 
   useEffect(() => {
     if (!modelFileName) return; // Don't proceed if modelFileName is not provided
@@ -33,7 +25,11 @@ const ThreeCanvasNew = ({
     const scene = sceneRef.current;
     const camera = cameraRef.current;
     const renderer = rendererRef.current;
-    renderer.setSize(500, 500);
+    // renderer.setSize(500, 500);
+    renderer.setSize(
+      (window.innerWidth * 5) / 12,
+      (window.innerWidth * 5) / 12
+    );
     renderer.setClearColor(0x19191e, 1);
     let controls = controlsRef.current;
 
@@ -95,24 +91,15 @@ const ThreeCanvasNew = ({
 
     // Initialize scene, camera, and renderer
     const scene = sceneRef.current;
-    const camera = cameraRef.current;
-    const renderer = rendererRef.current;
-    renderer.setSize(500, 500);
-    renderer.setClearColor(0x19191e, 1);
-    const controls = controlsRef.current;
 
     observerIds.forEach((observerId, index) => {
-      // console.log(observerId);
       if (observerId) {
-        console.log(observerId);
-
         // Create a shallow copy of scene.children to safely iterate over
         const childrenCopy = scene.children.slice();
 
         childrenCopy.forEach((child) => {
           // Assuming statVizFlags is an array with the same length as the number of fixation elements
           if (child.name === `fixation-${index}`) {
-            console.log(index);
             scene.remove(child); // Remove the child from the scene
           }
         });
@@ -132,14 +119,10 @@ const ThreeCanvasNew = ({
         // Note: This assumes the focus point is at the origin. If not, you would need to translate the camera position to the focus point, apply the rotation, and then translate back.
         const rotatedPosition = originalPosition.applyMatrix4(rotationMatrix);
 
-        // Now, rotatedPosition contains the observer's position after applying the rotation
-        console.log(
-          `Observer ${observerId} rotated position:`,
-          rotatedPosition
-        );
-
-        const geometry = new THREE.SphereGeometry(5, 32, 32);
-        const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+        const geometry = new THREE.SphereGeometry(10, 32, 32);
+        const material = new THREE.MeshBasicMaterial({
+          color: colors.directions[index % colors.directions.length],
+        });
         const sphere = new THREE.Mesh(geometry, material);
         sphere.position.copy(rotatedPosition);
         sphere.name = `direction-${index}`;
@@ -154,8 +137,11 @@ const ThreeCanvasNew = ({
 
           fixations.forEach((fixation) => {
             const position = fixation.position;
-            const geometry = new THREE.SphereGeometry(5, 32, 32); // Adjust the size as needed
-            const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Red color for visibility
+            const radius = Math.max(1, (fixation.duration * 10) / 1000);
+            const geometry = new THREE.SphereGeometry(radius, 32, 32); // Adjust the size as needed
+            const material = new THREE.MeshBasicMaterial({
+              color: colors.directions[index % colors.directions.length],
+            }); // Red color for visibility
             const sphere = new THREE.Mesh(geometry, material);
 
             sphere.position.x = position[0] - offset[0];
@@ -166,10 +152,8 @@ const ThreeCanvasNew = ({
             sphere.applyMatrix4(invertedMatrix);
 
             sphere.name = `fixation-${direction}`;
-            console.log(sphere.name);
 
             sphere.visible = statVizFlags[index];
-            console.log(sphere.visible);
 
             // Add the sphere to the scene
             sceneRef.current.add(sphere);
@@ -216,16 +200,8 @@ const ThreeCanvasNew = ({
                 1
               );
 
-              // Define direction and calculate rotation in degrees
-              const direction = matchingObject.condition.direction;
-              console.log("Direction of the matching object:", direction);
-
               // Read and console log the fixations attribute
               const fixations = matchingObject.fixations;
-              // console.log(matchingObject);
-              // console.log(fixations);
-
-              // console.log("Fixations:", fixations);
               addFixationSpheres(fixations, offset, matrix, index);
             } else {
               console.log(
@@ -245,10 +221,6 @@ const ThreeCanvasNew = ({
     // Initialize scene, camera, and renderer
     const scene = sceneRef.current;
     const camera = cameraRef.current;
-    const renderer = rendererRef.current;
-    renderer.setSize(500, 500);
-    renderer.setClearColor(0x19191e, 1);
-    const controls = controlsRef.current;
 
     // Assuming cameraPos is available and is the value you want to match in the child's name
     const targetName = `direction-${cameraPos}`;
@@ -256,7 +228,6 @@ const ThreeCanvasNew = ({
       (child) => child.name === targetName
     );
     if (targetChild) {
-      console.log("Found child:", targetChild);
       camera.position.copy(targetChild.position.clone());
     } else {
       console.log("No child found with the name:", targetName);
@@ -266,18 +237,13 @@ const ThreeCanvasNew = ({
   useEffect(() => {
     if (!modelFileName) return; // Don't proceed if modelFileName is not provided
 
-    // console.log(statVizFlags);
-
     // Initialize scene, camera, and renderer
     const scene = sceneRef.current;
 
-    // console.log(statVizFlags);
     // Loop through each statVizFlag
     statVizFlags.forEach((isVisible, index) => {
-      // console.log(isVisible);
       // Construct the name to look for
       const targetName = `fixation-${index}`;
-      // console.log(targetName);
 
       // Find children with the matching name
       scene.children.forEach((child) => {
@@ -292,7 +258,11 @@ const ThreeCanvasNew = ({
   return (
     <div
       ref={canvasRef}
-      style={{ width: "500px", height: "500px", margin: "auto" }}
+      style={{
+        width: "100vw",
+        height: "100vh",
+        margin: "auto",
+      }}
     />
   );
 };

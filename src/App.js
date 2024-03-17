@@ -115,7 +115,7 @@ function App() {
                 cameraPos={cameraPos}
                 statVizFlags={statVizFlags}
               />
-              <ThreeCanvas
+              {/*<ThreeCanvas
                 observerId={selectedObserverId}
                 modelFileName={selectedFile}
                 timeViz={timeViz}
@@ -125,6 +125,7 @@ function App() {
                 tableData={tableData}
                 setTableData={setTableData}
               />
+          */}
             </>
           )}
         </div>
