@@ -8,6 +8,7 @@ import ViolinPlot from "./ViolinPlot";
 import PolarHistogram from "./PolarHistogram";
 import StatTable from "./StatTable";
 import ParametersTab from "./ParametersTab";
+import colors from "./colors.json";
 
 function App() {
   const [selectedFile, setSelectedFile] = useState("");
@@ -34,6 +35,16 @@ function App() {
   const [isExpandedViolin, setIsExpandedViolin] = useState(false);
   const [isExpandedPolar, setIsExpandedPolar] = useState(false);
   const [statVizFlags, setStatVizFlags] = useState(Array(7).fill(false));
+  const initialDirectionColors = colors.directions.reduce(
+    (acc, color, index) => {
+      acc[index] = color; // Assign the color to the corresponding index
+      return acc;
+    },
+    {}
+  );
+  const [directionColors, setDirectionColors] = useState(
+    initialDirectionColors
+  ); // Initialize state for observer colors
 
   const handleFileSelected = (file) => {
     setSelectedFile(file);
@@ -42,11 +53,12 @@ function App() {
     setStatVizFlags(Array(7).fill(false));
     setCameraPos();
     setSelectedObserverId(""); // Reset observer ID when a new file is selected
+    // setDirectionColors({});
   };
 
-  const handleObserverSelected = (observerId) => {
-    setSelectedObserverId(observerId);
-  };
+  // const handleObserverSelected = (observerId) => {
+  //   setSelectedObserverId(observerId);
+  // };
 
   // Handler for the visualization button
   const handleVisualizationClick = () => {
@@ -93,13 +105,19 @@ function App() {
               <div>
                 <button onClick={handleExpandViolin}>Huslový graf</button>
                 {isExpandedViolin && (
-                  <ViolinPlot modelFileName={selectedFile} />
+                  <ViolinPlot
+                    modelFileName={selectedFile}
+                    directionColors={directionColors}
+                  />
                 )}
               </div>
               <div>
                 <button onClick={handleExpandPolar}>Polárny histogram</button>
                 {isExpandedPolar && (
-                  <PolarHistogram modelFileName={selectedFile} />
+                  <PolarHistogram
+                    modelFileName={selectedFile}
+                    directionColors={directionColors}
+                  />
                 )}
               </div>
             </>
@@ -114,6 +132,7 @@ function App() {
                 observerIds={selectedObserverIds}
                 cameraPos={cameraPos}
                 statVizFlags={statVizFlags}
+                directionColors={directionColors}
               />
               {/*<ThreeCanvas
                 observerId={selectedObserverId}
@@ -148,6 +167,8 @@ function App() {
                   setCameraPos={setCameraPos}
                   statVizFlags={statVizFlags}
                   setStatVizFlags={setStatVizFlags}
+                  directionColors={directionColors}
+                  setDirectionColors={setDirectionColors}
                 />
               </>
             )}

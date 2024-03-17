@@ -1,5 +1,5 @@
 // PolarHistogram.js
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import ObserverSelector from "./ObserverSelector";
 
 const ParametersTab = ({
@@ -9,6 +9,8 @@ const ParametersTab = ({
   setCameraPos,
   statVizFlags,
   setStatVizFlags,
+  directionColors,
+  setDirectionColors,
 }) => {
   useEffect(() => {
     if (!modelFileName) return;
@@ -45,6 +47,12 @@ const ParametersTab = ({
     setCameraPos(index);
   };
 
+  const handleColorChange = (color, index) => {
+    const newColors = { ...directionColors, [index]: color };
+    console.log(newColors);
+    setDirectionColors(newColors);
+  };
+
   return (
     <div>
       {observerIds.map((observerId, index) => (
@@ -55,6 +63,11 @@ const ParametersTab = ({
             }
             modelFileName={modelFileName}
             index={index}
+          />
+          <input
+            type="color"
+            value={directionColors[index] || "#ffffff"} // Default color or the selected color
+            onChange={(e) => handleColorChange(e.target.value, index)}
           />
           <> SV </>
           <input

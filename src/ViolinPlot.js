@@ -1,8 +1,7 @@
 import React, { useEffect } from "react";
 import Plot from "plotly.js-dist-min";
-import colors from "./colors.json";
 
-const ViolinPlot = ({ modelFileName }) => {
+const ViolinPlot = ({ modelFileName, directionColors }) => {
   useEffect(() => {
     async function fetchJsonData(modelFileName) {
       //   console.log(modelFileName);
@@ -85,7 +84,10 @@ const ViolinPlot = ({ modelFileName }) => {
             visible: true,
           },
           marker: {
-            color: colors.directions[index % colors.directions.length], // Adjusted to access the 'directions' array
+            color:
+              directionColors[index] != null
+                ? directionColors[index]
+                : "#ffffff", // Adjusted to access the 'directions' array
           },
         }));
 
@@ -119,7 +121,7 @@ const ViolinPlot = ({ modelFileName }) => {
     };
 
     fetchData();
-  }, [modelFileName]);
+  }, [modelFileName, directionColors]);
 
   return <div id="violinPlot"></div>;
 };

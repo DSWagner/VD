@@ -1,20 +1,24 @@
 // PolarHistogram.js
 import React, { useEffect } from "react";
 import Plot from "plotly.js-dist-min";
-import colors from "./colors.json";
 
-const PolarHistogram = ({ modelFileName }) => {
+const PolarHistogram = ({ modelFileName, directionColors }) => {
   useEffect(() => {
     const processData = (data) => {
       // Process your data here to fit the polar histogram requirements
       // This is a placeholder function, adapt it based on your actual data structure
       console.log(data);
+      const barColors = Array.from({ length: 7 }, (_, index) =>
+        directionColors[index] != null ? directionColors[index] : "#ffffff"
+      );
+      console.log(barColors);
+
       return data.map((item, index) => ({
         r: item.values,
         theta: item.directions,
         type: "barpolar",
         marker: {
-          color: colors["directions"], // Use the modulo operator to loop through colors
+          color: barColors, // Use the modulo operator to loop through colors
           line: {
             color: "#e0e0e0", // This sets the outline color to black
             width: 1, // This sets the outline width. Adjust as needed.
@@ -167,33 +171,7 @@ const PolarHistogram = ({ modelFileName }) => {
     };
 
     fetchData();
-
-    // const polarHistogramData =
-    // // [
-    // //   {
-    // //     values: [90, 70, 80, 100],
-    // //     directions: ["N", "E", "S", "W"],
-    // //     type: "barpolar",
-    // //   },
-    // //   // Add more items as needed
-    // // ];
-
-    // const plotData = processData(polarHistogramData);
-
-    // const layout = {
-    //   title: "Polar Histogram",
-    //   font: { size: 16 },
-    //   polar: {
-    //     barmode: "overlay",
-    //     bargap: 0,
-    //     radialaxis: { ticksuffix: "%", angle: 45 },
-    //     angularaxis: { direction: "clockwise" },
-    //   },
-    //   paper_bgcolor: "white",
-    // };
-
-    // Plot.newPlot("polarHistogram", plotData, layout);
-  }, [modelFileName]); // Re-run the effect if data changes
+  }, [modelFileName, directionColors]); // Re-run the effect if data changes
 
   return <div id="polarHistogram"></div>;
 };

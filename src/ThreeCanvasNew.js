@@ -2,13 +2,13 @@ import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import colors from "./colors.json";
 
 const ThreeCanvasNew = ({
   modelFileName,
   observerIds,
   cameraPos,
   statVizFlags,
+  directionColors,
 }) => {
   const sceneRef = useRef(new THREE.Scene());
   const cameraRef = useRef(new THREE.PerspectiveCamera(60, 1, 0.1, 1000));
@@ -121,7 +121,9 @@ const ThreeCanvasNew = ({
 
         const geometry = new THREE.SphereGeometry(10, 32, 32);
         const material = new THREE.MeshBasicMaterial({
-          color: colors.directions[index % colors.directions.length],
+          // color: colors.directions[index % colors.directions.length],
+          color:
+            directionColors[index] != null ? directionColors[index] : "#ffffff",
         });
         const sphere = new THREE.Mesh(geometry, material);
         sphere.position.copy(rotatedPosition);
@@ -140,7 +142,11 @@ const ThreeCanvasNew = ({
             const radius = Math.max(1, (fixation.duration * 10) / 1000);
             const geometry = new THREE.SphereGeometry(radius, 32, 32); // Adjust the size as needed
             const material = new THREE.MeshBasicMaterial({
-              color: colors.directions[index % colors.directions.length],
+              // color: colors.directions[index % colors.directions.length],
+              color:
+                directionColors[index] != null
+                  ? directionColors[index]
+                  : "#ffffff",
             }); // Red color for visibility
             const sphere = new THREE.Mesh(geometry, material);
 
@@ -254,6 +260,31 @@ const ThreeCanvasNew = ({
       });
     });
   }, [modelFileName, statVizFlags]); // Depend on modelFileName to re-trigger loading
+
+  useEffect(() => {
+    // Initialize scene, camera, and renderer
+    const scene = sceneRef.current;
+
+    console.log("KOKOT");
+
+    // Iterate through each key-value pair in directionColors
+    Object.entries(directionColors).forEach(([key, colorValue]) => {
+      // Iterate through each child in the scene
+      scene.children.forEach((child) => {
+        // Check if the child's name matches the pattern "direction-${key}" or "fixation-${key}"
+        if (
+          child.name === `direction-${key}` ||
+          child.name === `fixation-${key}`
+        ) {
+          // Assuming the child is a Mesh and has a material property
+          if (child.material && child.material.color) {
+            // Update the color of the child
+            child.material.color.set(colorValue);
+          }
+        }
+      });
+    });
+  }, [directionColors]);
 
   return (
     <div
