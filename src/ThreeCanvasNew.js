@@ -322,7 +322,10 @@ const ThreeCanvasNew = ({
 
       childrenCopy.forEach((child) => {
         // Assuming statVizFlags is an array with the same length as the number of fixation elements
-        if (child.name === `dyna-fixation-${direction}`) {
+        if (
+          child.name === `dyna-fixation-${direction}` ||
+          child.name === `line-${direction}`
+        ) {
           scene.remove(child); // Remove the child from the scene
         }
       });
@@ -363,7 +366,7 @@ const ThreeCanvasNew = ({
 
           const lastFixation = fixations[fixations.length - 1];
           const sessionEndTime =
-            lastFixation["start timestamp"] + lastFixation.duration;
+            lastFixation["start timestamp"] + lastFixation.duration / 1000;
           console.log("Session End Time:", sessionEndTime);
 
           sphere.position.x = position[0] - offset[0];
@@ -403,6 +406,7 @@ const ThreeCanvasNew = ({
 
             // Creating the line
             const line = new THREE.Line(geometry, material);
+            line.name = `line-${direction}`;
 
             // Adding the line to the scene
             sceneRef.current.add(line);
