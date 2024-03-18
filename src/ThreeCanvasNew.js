@@ -8,6 +8,7 @@ const ThreeCanvasNew = ({
   observerIds,
   cameraPos,
   statVizFlags,
+  dynaVizFlags,
   directionColors,
 }) => {
   const sceneRef = useRef(new THREE.Scene());
@@ -16,6 +17,9 @@ const ThreeCanvasNew = ({
   const controlsRef = useRef(null);
   const canvasRef = useRef(null);
   const cameraPosRef = useRef(null);
+  const centerRef = useRef(null);
+  // Inside your component
+  const prevDynaVizFlagsRef = useRef();
 
   useEffect(() => {
     if (!modelFileName) return; // Don't proceed if modelFileName is not provided
@@ -59,6 +63,7 @@ const ThreeCanvasNew = ({
 
       camera.position.copy(cameraPosition);
       camera.lookAt(boundingBoxCenter);
+      centerRef.current = boundingBoxCenter.clone();
 
       // Update the controls target to look at the center of the model
       controls.target.copy(boundingBoxCenter);
@@ -99,7 +104,7 @@ const ThreeCanvasNew = ({
 
         childrenCopy.forEach((child) => {
           // Assuming statVizFlags is an array with the same length as the number of fixation elements
-          if (child.name === `fixation-${index}`) {
+          if (child.name === `stat-fixation-${index}`) {
             scene.remove(child); // Remove the child from the scene
           }
         });
@@ -157,7 +162,7 @@ const ThreeCanvasNew = ({
             // Apply the inverted matrix to each sphere
             sphere.applyMatrix4(invertedMatrix);
 
-            sphere.name = `fixation-${direction}`;
+            sphere.name = `stat-fixation-${direction}`;
 
             sphere.visible = statVizFlags[index];
 
@@ -249,7 +254,7 @@ const ThreeCanvasNew = ({
     // Loop through each statVizFlag
     statVizFlags.forEach((isVisible, index) => {
       // Construct the name to look for
-      const targetName = `fixation-${index}`;
+      const targetName = `stat-fixation-${index}`;
 
       // Find children with the matching name
       scene.children.forEach((child) => {
@@ -265,16 +270,14 @@ const ThreeCanvasNew = ({
     // Initialize scene, camera, and renderer
     const scene = sceneRef.current;
 
-    console.log("KOKOT");
-
     // Iterate through each key-value pair in directionColors
     Object.entries(directionColors).forEach(([key, colorValue]) => {
       // Iterate through each child in the scene
       scene.children.forEach((child) => {
-        // Check if the child's name matches the pattern "direction-${key}" or "fixation-${key}"
+        // Check if the child's name matches the pattern "direction-${key}" or "stat-fixation-${key}"
         if (
           child.name === `direction-${key}` ||
-          child.name === `fixation-${key}`
+          child.name === `stat-fixation-${key}`
         ) {
           // Assuming the child is a Mesh and has a material property
           if (child.material && child.material.color) {
@@ -285,6 +288,203 @@ const ThreeCanvasNew = ({
       });
     });
   }, [directionColors]);
+
+  useEffect(() => {
+    // Initialize scene, camera, and renderer
+    if (!modelFileName) return;
+    const scene = sceneRef.current;
+
+    const prevDynaVizFlags = prevDynaVizFlagsRef.current;
+    let direction = -1;
+
+    console.log(prevDynaVizFlags);
+    console.log(dynaVizFlags);
+
+    if (prevDynaVizFlags) {
+      dynaVizFlags.forEach((flag, index) => {
+        if (flag !== prevDynaVizFlags[index]) {
+          console.log(`Value changed at index ${index}:`, flag);
+          direction = index;
+        }
+      });
+    }
+
+    console.log(direction);
+    // Update the ref to the current state for the next render
+    prevDynaVizFlagsRef.current = dynaVizFlags;
+
+    if (direction == -1) return;
+
+    if (!dynaVizFlags[direction]) {
+      console.log("VYMAZ");
+      // Create a shallow copy of scene.children to safely iterate over
+      const childrenCopy = scene.children.slice();
+
+      childrenCopy.forEach((child) => {
+        // Assuming statVizFlags is an array with the same length as the number of fixation elements
+        if (child.name === `dyna-fixation-${direction}`) {
+          scene.remove(child); // Remove the child from the scene
+        }
+      });
+    } else {
+      const observerId = observerIds[direction];
+      console.log("KOKOT");
+      console.log("Observer ID: ", observerId);
+      console.log("FLAG: ", dynaVizFlags[direction]);
+
+      if (observerId) {
+        const jsonFileName = modelFileName.replace(".stl", ".json");
+        const jsonFilePath = `${process.env.PUBLIC_URL}/Dataset/gazePerObject/${jsonFileName}`;
+
+        function addFixationSpheres(
+          fixations,
+          offset,
+          matrix,
+          direction,
+          index = 0
+        ) {
+          // Base case: if index is out of bounds, return to stop the recursion
+          if (index >= fixations.length) {
+            return;
+          }
+
+          const fixation = fixations[index];
+          const invertedMatrix = matrix.clone().invert();
+          const position = fixation.position;
+          const radius = Math.max(1, (fixation.duration * 10) / 1000);
+          const geometry = new THREE.SphereGeometry(radius, 32, 32);
+          const material = new THREE.MeshBasicMaterial({
+            color:
+              directionColors[direction] != null
+                ? directionColors[direction]
+                : "#ffffff",
+          });
+          const sphere = new THREE.Mesh(geometry, material);
+
+          const lastFixation = fixations[fixations.length - 1];
+          const sessionEndTime =
+            lastFixation["start timestamp"] + lastFixation.duration;
+          console.log("Session End Time:", sessionEndTime);
+
+          sphere.position.x = position[0] - offset[0];
+          sphere.position.y = position[1] - offset[1];
+          sphere.position.z = position[2] - offset[2];
+          sphere.applyMatrix4(invertedMatrix);
+          sphere.name = `dyna-fixation-${direction}`;
+          sceneRef.current.add(sphere);
+
+          const observerChild = scene.children.find(
+            (child) => child.name === `direction-${direction}`
+          );
+
+          if (observerChild) {
+            // Observer's position (assuming observerChild is already defined)
+            const observerPosition = observerChild.position;
+
+            // Creating the vector from the model to the observer
+            const vectorFromModelToObserver = new THREE.Vector3().subVectors(
+              observerPosition,
+              sphere.position
+            );
+
+            // Creating geometry for the line
+            const geometry = new THREE.BufferGeometry().setFromPoints([
+              observerPosition,
+              sphere.position,
+            ]);
+
+            // Creating material for the line
+            const material = new THREE.LineBasicMaterial({
+              color:
+                directionColors[direction] != null
+                  ? directionColors[direction]
+                  : "#ffffff",
+            });
+
+            // Creating the line
+            const line = new THREE.Line(geometry, material);
+
+            // Adding the line to the scene
+            sceneRef.current.add(line);
+
+            console.log(
+              "Vector from model to observer:",
+              vectorFromModelToObserver
+            );
+          }
+
+          const delay = fixations[index + 1]
+            ? (fixations[index + 1]["start timestamp"] -
+                fixations[index]["start timestamp"]) *
+              1000
+            : fixation.duration;
+
+          // Recursive call with the next index
+          setTimeout(() => {
+            addFixationSpheres(fixations, offset, matrix, direction, index + 1);
+          }, delay);
+        }
+
+        // Fetch the JSON file
+        fetch(jsonFilePath)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            // Assuming 'data' is the array of objects
+            const matchingObject = data.find(
+              (item) => item["observer id"].toString() === observerId.toString()
+            );
+            if (matchingObject) {
+              // Access and log the orientation from the matching object
+              const orientation = matchingObject.condition.orientation;
+
+              const offset = matchingObject.condition.offset;
+
+              // Creating a Matrix4 from the 3x3 rotation matrix
+              const matrix = new THREE.Matrix4();
+              matrix.set(
+                orientation[0],
+                orientation[1],
+                orientation[2],
+                0,
+                orientation[3],
+                orientation[4],
+                orientation[5],
+                0,
+                orientation[6],
+                orientation[7],
+                orientation[8],
+                0,
+                0,
+                0,
+                0,
+                1
+              );
+
+              // Read and console log the fixations attribute
+              const fixations = matchingObject.fixations;
+              if (fixations) {
+                setTimeout(() => {
+                  addFixationSpheres(fixations, offset, matrix, direction);
+                }, fixations[0]["start timestamp"] * 1000);
+              }
+            } else {
+              console.log(
+                "No matching object found for observer ID:",
+                observerId
+              );
+            }
+          })
+          .catch((error) => console.error("Error loading JSON file:", error));
+      }
+    }
+
+    console.log(direction);
+  }, [dynaVizFlags]);
 
   return (
     <div

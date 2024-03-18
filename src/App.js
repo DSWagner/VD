@@ -35,6 +35,7 @@ function App() {
   const [isExpandedViolin, setIsExpandedViolin] = useState(false);
   const [isExpandedPolar, setIsExpandedPolar] = useState(false);
   const [statVizFlags, setStatVizFlags] = useState(Array(7).fill(false));
+  const [dynaVizFlags, setDynaVizFlags] = useState(Array(7).fill(false));
   const initialDirectionColors = colors.directions.reduce(
     (acc, color, index) => {
       acc[index] = color; // Assign the color to the corresponding index
@@ -51,6 +52,7 @@ function App() {
     setSelectedObserverIds(Array(7).fill(""));
     setTableData([tableData[0]]);
     setStatVizFlags(Array(7).fill(false));
+    setDynaVizFlags(Array(7).fill(false));
     setCameraPos();
     setSelectedObserverId(""); // Reset observer ID when a new file is selected
     // setDirectionColors({});
@@ -132,6 +134,7 @@ function App() {
                 observerIds={selectedObserverIds}
                 cameraPos={cameraPos}
                 statVizFlags={statVizFlags}
+                dynaVizFlags={dynaVizFlags}
                 directionColors={directionColors}
               />
               {/*<ThreeCanvas
@@ -167,6 +170,8 @@ function App() {
                   setCameraPos={setCameraPos}
                   statVizFlags={statVizFlags}
                   setStatVizFlags={setStatVizFlags}
+                  dynaVizFlags={dynaVizFlags}
+                  setDynaVizFlags={setDynaVizFlags}
                   directionColors={directionColors}
                   setDirectionColors={setDirectionColors}
                 />

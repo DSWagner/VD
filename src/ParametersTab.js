@@ -9,6 +9,8 @@ const ParametersTab = ({
   setCameraPos,
   statVizFlags,
   setStatVizFlags,
+  dynaVizFlags,
+  setDynaVizFlags,
   directionColors,
   setDirectionColors,
 }) => {
@@ -36,9 +38,15 @@ const ParametersTab = ({
   };
 
   const handleDynaVizCheckbox = (flag, index) => {
-    console.log("Dynamic Viz");
-    console.log(flag);
-    console.log(index);
+    // console.log("Dynamic Viz");
+    // console.log(flag);
+    // console.log(index);
+    // Update statVizFlags in an immutable way
+    const updatedFlags = dynaVizFlags.map((item, idx) =>
+      idx === index ? flag : item
+    );
+    // console.log(updatedFlags);
+    setDynaVizFlags(updatedFlags);
   };
 
   const handleObserverPosition = (index) => {
@@ -78,6 +86,7 @@ const ParametersTab = ({
           <> DV </>
           <input
             type="checkbox"
+            checked={dynaVizFlags[index]}
             onChange={(e) => handleDynaVizCheckbox(e.target.checked, index)}
           />
           <button onClick={() => handleObserverPosition(index)}>Pozícia</button>
