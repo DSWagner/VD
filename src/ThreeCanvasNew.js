@@ -12,7 +12,7 @@ const ThreeCanvasNew = ({
   directionColors,
 }) => {
   const sceneRef = useRef(new THREE.Scene());
-  const cameraRef = useRef(new THREE.PerspectiveCamera(60, 1, 0.1, 1000));
+  const cameraRef = useRef(new THREE.PerspectiveCamera(60, 1, 0.1, 10000));
   const rendererRef = useRef(new THREE.WebGLRenderer({ antialias: true }));
   const controlsRef = useRef(null);
   const canvasRef = useRef(null);
@@ -339,6 +339,7 @@ const ThreeCanvasNew = ({
         const jsonFileName = modelFileName.replace(".stl", ".json");
         const jsonFilePath = `${process.env.PUBLIC_URL}/Dataset/gazePerObject/${jsonFileName}`;
 
+        let lastCylinderPosition = null; // Outside the function, to keep track of the last cylinder's position
         function addFixationSpheres(
           fixations,
           offset,
@@ -354,67 +355,102 @@ const ThreeCanvasNew = ({
           const fixation = fixations[index];
           const invertedMatrix = matrix.clone().invert();
           const position = fixation.position;
-          const radius = Math.max(1, (fixation.duration * 10) / 1000);
-          const geometry = new THREE.SphereGeometry(radius, 32, 32);
+          const radius = Math.max(1, (fixation.duration * 15) / 1000);
+          const geometry = new THREE.CylinderGeometry(
+            radius,
+            radius,
+            fixation.duration / 50,
+            32
+          );
           const material = new THREE.MeshBasicMaterial({
             color:
               directionColors[direction] != null
                 ? directionColors[direction]
                 : "#ffffff",
           });
-          const sphere = new THREE.Mesh(geometry, material);
+          const cylinder = new THREE.Mesh(geometry, material);
 
           const lastFixation = fixations[fixations.length - 1];
           const sessionEndTime =
             lastFixation["start timestamp"] + lastFixation.duration / 1000;
           console.log("Session End Time:", sessionEndTime);
 
-          sphere.position.x = position[0] - offset[0];
-          sphere.position.y = position[1] - offset[1];
-          sphere.position.z = position[2] - offset[2];
-          sphere.applyMatrix4(invertedMatrix);
-          sphere.name = `dyna-fixation-${direction}`;
-          sceneRef.current.add(sphere);
+          cylinder.position.x = position[0] - offset[0];
+          cylinder.position.y = position[1] - offset[1];
+          cylinder.position.z = position[2] - offset[2];
+          cylinder.applyMatrix4(invertedMatrix);
+          cylinder.name = `dyna-fixation-${direction}`;
+          // sceneRef.current.add(sphere);
 
           const observerChild = scene.children.find(
             (child) => child.name === `direction-${direction}`
           );
 
           if (observerChild) {
-            // Observer's position (assuming observerChild is already defined)
             const observerPosition = observerChild.position;
-
-            // Creating the vector from the model to the observer
             const vectorFromModelToObserver = new THREE.Vector3().subVectors(
               observerPosition,
-              sphere.position
+              centerRef.current
             );
 
-            // Creating geometry for the line
-            const geometry = new THREE.BufferGeometry().setFromPoints([
-              observerPosition,
-              sphere.position,
-            ]);
+            // Calculate the projection of sphere.position onto vectorFromModelToObserver
+            const projectionScalar =
+              cylinder.position.dot(vectorFromModelToObserver) /
+              vectorFromModelToObserver.lengthSq();
+            console.log(projectionScalar);
+            const projectionVector = vectorFromModelToObserver
+              .clone()
+              .multiplyScalar(projectionScalar);
 
-            // Creating material for the line
-            const material = new THREE.LineBasicMaterial({
-              color:
-                directionColors[direction] != null
-                  ? directionColors[direction]
-                  : "#ffffff",
-            });
+            // Calculate the distance from the projection point to the origin of the vector
+            const originToProjectionDistance = projectionVector.length();
 
-            // Creating the line
-            const line = new THREE.Line(geometry, material);
-            line.name = `line-${direction}`;
+            // console.log(originToProjectionDistance);
 
-            // Adding the line to the scene
-            sceneRef.current.add(line);
-
-            console.log(
-              "Vector from model to observer:",
-              vectorFromModelToObserver
+            // Move the sphere by this distance in the opposite direction of the vector
+            let moveDirection = vectorFromModelToObserver.normalize();
+            moveDirection =
+              projectionScalar >= 0 ? moveDirection.negate() : moveDirection;
+            const moveVector = moveDirection.multiplyScalar(
+              originToProjectionDistance
             );
+            cylinder.position.add(moveVector);
+
+            // Now, apply an incremental distance to the sphere in the direction of vectorFromModelToObserver
+            // Normalize the vector for direction, and scale it by the incremental distance
+            const incrementalMoveVector =
+              projectionScalar >= 0
+                ? vectorFromModelToObserver.normalize().negate()
+                : vectorFromModelToObserver.normalize();
+            let increment =
+              100 + fixation["start timestamp"] * 50 + fixation.duration / 100;
+            let incrementaDistance =
+              incrementalMoveVector.multiplyScalar(increment);
+            cylinder.position.add(incrementaDistance);
+
+            // Check if there's a previous cylinder to connect to
+            if (lastCylinderPosition) {
+              // Create a geometry that represents a line between the last cylinder and the current one
+              const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+                lastCylinderPosition,
+                cylinder.position.clone(),
+              ]);
+
+              // Use the same material color as the cylinder
+              const lineMaterial = new THREE.LineBasicMaterial({
+                color:
+                  directionColors[direction] != null
+                    ? directionColors[direction]
+                    : "#ffffff",
+              });
+
+              // Create the line and add it to the scene
+              const line = new THREE.Line(lineGeometry, lineMaterial);
+              line.name = `line-${direction}`;
+              sceneRef.current.add(line);
+            }
+            lastCylinderPosition = cylinder.position.clone();
+            sceneRef.current.add(cylinder);
           }
 
           const delay = fixations[index + 1]
