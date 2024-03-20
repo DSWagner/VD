@@ -277,7 +277,9 @@ const ThreeCanvasNew = ({
         // Check if the child's name matches the pattern "direction-${key}" or "stat-fixation-${key}"
         if (
           child.name === `direction-${key}` ||
-          child.name === `stat-fixation-${key}`
+          child.name === `stat-fixation-${key}` ||
+          child.name === `dyna-fixation-${key}` ||
+          child.name === `line-${key}`
         ) {
           // Assuming the child is a Mesh and has a material property
           if (child.material && child.material.color) {
@@ -355,11 +357,11 @@ const ThreeCanvasNew = ({
           const fixation = fixations[index];
           const invertedMatrix = matrix.clone().invert();
           const position = fixation.position;
-          const radius = Math.max(1, (fixation.duration * 15) / 1000);
+          const radius = Math.max(1, (fixation.duration * 20) / 1000);
           const geometry = new THREE.CylinderGeometry(
             radius,
             radius,
-            fixation.duration / 50,
+            fixation.duration / 20,
             32
           );
           const material = new THREE.MeshBasicMaterial({
@@ -369,11 +371,6 @@ const ThreeCanvasNew = ({
                 : "#ffffff",
           });
           const cylinder = new THREE.Mesh(geometry, material);
-
-          const lastFixation = fixations[fixations.length - 1];
-          const sessionEndTime =
-            lastFixation["start timestamp"] + lastFixation.duration / 1000;
-          console.log("Session End Time:", sessionEndTime);
 
           cylinder.position.x = position[0] - offset[0];
           cylinder.position.y = position[1] - offset[1];
@@ -404,9 +401,6 @@ const ThreeCanvasNew = ({
 
             // Calculate the distance from the projection point to the origin of the vector
             const originToProjectionDistance = projectionVector.length();
-
-            // console.log(originToProjectionDistance);
-
             // Move the sphere by this distance in the opposite direction of the vector
             let moveDirection = vectorFromModelToObserver.normalize();
             moveDirection =
@@ -422,10 +416,18 @@ const ThreeCanvasNew = ({
               projectionScalar >= 0
                 ? vectorFromModelToObserver.normalize().negate()
                 : vectorFromModelToObserver.normalize();
-            let increment =
-              100 + fixation["start timestamp"] * 50 + fixation.duration / 100;
-            let incrementaDistance =
-              incrementalMoveVector.multiplyScalar(increment);
+            let increment = 100 + fixation["start timestamp"] * 50;
+            let incrementaDistance = incrementalMoveVector
+              .clone()
+              .multiplyScalar(increment);
+            cylinder.position.add(incrementaDistance);
+
+            const currentCylinderPosition = cylinder.position.clone();
+
+            increment = fixation.duration / 40;
+            incrementaDistance = incrementalMoveVector
+              .clone()
+              .multiplyScalar(increment);
             cylinder.position.add(incrementaDistance);
 
             // Check if there's a previous cylinder to connect to
@@ -433,7 +435,7 @@ const ThreeCanvasNew = ({
               // Create a geometry that represents a line between the last cylinder and the current one
               const lineGeometry = new THREE.BufferGeometry().setFromPoints([
                 lastCylinderPosition,
-                cylinder.position.clone(),
+                currentCylinderPosition,
               ]);
 
               // Use the same material color as the cylinder
@@ -449,7 +451,9 @@ const ThreeCanvasNew = ({
               line.name = `line-${direction}`;
               sceneRef.current.add(line);
             }
-            lastCylinderPosition = cylinder.position.clone();
+            lastCylinderPosition = cylinder.position
+              .clone()
+              .sub(incrementalMoveVector.clone().multiplyScalar(-increment));
             sceneRef.current.add(cylinder);
           }
 
