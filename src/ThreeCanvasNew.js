@@ -357,7 +357,7 @@ const ThreeCanvasNew = ({
           const fixation = fixations[index];
           const invertedMatrix = matrix.clone().invert();
           const position = fixation.position;
-          const radius = Math.max(1, (fixation.duration * 20) / 1000);
+          const radius = Math.max(1, (fixation.duration * 10) / 1000);
           const geometry = new THREE.CylinderGeometry(
             radius,
             radius,
@@ -390,11 +390,12 @@ const ThreeCanvasNew = ({
               centerRef.current
             );
 
-            // const targetPosition = new THREE.Vector3().subVectors(
-            //   cylinder.position,
-            //   vectorFromModelToObserver
-            // );
-            // cylinder.lookAt(targetPosition);
+            const targetPosition = new THREE.Vector3().addVectors(
+              cylinder.position,
+              vectorFromModelToObserver
+            );
+            cylinder.lookAt(targetPosition);
+            cylinder.rotateX(Math.PI / 2);
 
             // Calculate the projection of sphere.position onto vectorFromModelToObserver
             const projectionScalar =
