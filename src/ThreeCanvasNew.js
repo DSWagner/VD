@@ -390,6 +390,12 @@ const ThreeCanvasNew = ({
               centerRef.current
             );
 
+            // const targetPosition = new THREE.Vector3().subVectors(
+            //   cylinder.position,
+            //   vectorFromModelToObserver
+            // );
+            // cylinder.lookAt(targetPosition);
+
             // Calculate the projection of sphere.position onto vectorFromModelToObserver
             const projectionScalar =
               cylinder.position.dot(vectorFromModelToObserver) /
