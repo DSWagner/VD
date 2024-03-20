@@ -2,16 +2,23 @@
 import React, { useEffect } from "react";
 import Plot from "plotly.js-dist-min";
 
-const PolarHistogram = ({ modelFileName }) => {
+const PolarHistogram = ({ modelFileName, directionColors }) => {
   useEffect(() => {
     const processData = (data) => {
       // Process your data here to fit the polar histogram requirements
       // This is a placeholder function, adapt it based on your actual data structure
-      return data.map((item) => ({
+      console.log(data);
+      const barColors = Array.from({ length: 7 }, (_, index) =>
+        directionColors[index] != null ? directionColors[index] : "#ffffff"
+      );
+      console.log(barColors);
+
+      return data.map((item, index) => ({
         r: item.values,
         theta: item.directions,
         type: "barpolar",
         marker: {
+          color: barColors, // Use the modulo operator to loop through colors
           line: {
             color: "#e0e0e0", // This sets the outline color to black
             width: 1, // This sets the outline width. Adjust as needed.
@@ -64,20 +71,26 @@ const PolarHistogram = ({ modelFileName }) => {
         directionGroups[direction].push(averageDuration);
       });
 
+      // Convert directionGroups object to an array of [key, value] pairs
+      const directionGroupsArray = Object.entries(directionGroups);
+
+      // Sort the array based on the numeric value of the keys (directions)
+      directionGroupsArray.sort((a, b) => Number(a[0]) - Number(b[0]));
+
       // Initialize arrays for values and directions
       const values = [];
       const directions = [];
 
-      // Populate the arrays
-      Object.keys(directionGroups).forEach((direction) => {
-        const total = directionGroups[direction].reduce(
-          (sum, curr) => sum + curr,
-          0
-        );
-        const average = total / directionGroups[direction].length;
+      // Populate the arrays using the sorted directionGroupsArray
+      directionGroupsArray.forEach(([direction, group]) => {
+        const total = group.reduce((sum, curr) => sum + curr, 0);
+        const average = total / group.length;
         values.push(average);
         directions.push(direction);
       });
+
+      console.log(values);
+      console.log(directions);
 
       // Return the new structure
       return [
@@ -112,7 +125,7 @@ const PolarHistogram = ({ modelFileName }) => {
             radialaxis: {
               ticksuffix: "s",
               angle: 0,
-              gridcolor: "#e0e0e0",
+              gridcolor: "#19191e",
               title: "Priemerná dĺžka fixácií",
             },
             angularaxis: {
@@ -120,7 +133,7 @@ const PolarHistogram = ({ modelFileName }) => {
               tickmode: "array",
               tickvals: [315, 330, 345, 0, 15, 30, 45],
               ticktext: ["-45°", "-30°", "-15°", "0°", "15°", "30°", "45°"],
-              gridcolor: "#e0e0e0",
+              gridcolor: "#19191e",
             },
             bgcolor: "#19191e",
           },
@@ -158,33 +171,7 @@ const PolarHistogram = ({ modelFileName }) => {
     };
 
     fetchData();
-
-    // const polarHistogramData =
-    // // [
-    // //   {
-    // //     values: [90, 70, 80, 100],
-    // //     directions: ["N", "E", "S", "W"],
-    // //     type: "barpolar",
-    // //   },
-    // //   // Add more items as needed
-    // // ];
-
-    // const plotData = processData(polarHistogramData);
-
-    // const layout = {
-    //   title: "Polar Histogram",
-    //   font: { size: 16 },
-    //   polar: {
-    //     barmode: "overlay",
-    //     bargap: 0,
-    //     radialaxis: { ticksuffix: "%", angle: 45 },
-    //     angularaxis: { direction: "clockwise" },
-    //   },
-    //   paper_bgcolor: "white",
-    // };
-
-    // Plot.newPlot("polarHistogram", plotData, layout);
-  }, [modelFileName]); // Re-run the effect if data changes
+  }, [modelFileName, directionColors]); // Re-run the effect if data changes
 
   return <div id="polarHistogram"></div>;
 };

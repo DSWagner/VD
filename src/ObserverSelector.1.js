@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 
-const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
+export const ObserverSelector = ({
+  modelFileName,
+  onObserverSelected,
+  index,
+}) => {
   const [observerIds, setObserverIds] = useState([]);
 
   useEffect(() => {
@@ -20,7 +24,7 @@ const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
   }, [modelFileName, index]); // Include index in the dependency array
 
   return (
-    <>
+    <div>
       <label htmlFor={`observerSelector${index}`}>
         Smer: {(index - 3) * 15}° :
       </label>
@@ -30,7 +34,7 @@ const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
         key={modelFileName} // Add this line
       >
         <option value="" disabled>
-          ID pozorovateľa
+          Select Observer ID
         </option>
         {observerIds.map((id) => (
           <option key={id} value={id}>
@@ -38,8 +42,6 @@ const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
           </option>
         ))}
       </select>
-    </>
+    </div>
   );
 };
-
-export default ObserverSelector;
