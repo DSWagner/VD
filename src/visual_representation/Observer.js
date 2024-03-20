@@ -1,5 +1,6 @@
 import VisualElement from './VisualElement';
 import VisualRepresentation from './VisualRepresentation';
+// import Model from './Model';
 
 const chroma = require('chroma-js');
 
@@ -22,7 +23,7 @@ export default class Observer extends VisualElement {
         super(0,0,0, colors[0], VisualRepresentation.config.visualization.observer.size, true);
         this.id = observerId;
         this.colorPallete = colors;
-        this.display();
+        // this.display();
     }
     
     /**

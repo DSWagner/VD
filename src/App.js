@@ -6,8 +6,11 @@ import ObserverSelector from "./ObserverSelector";
 import ThreeCanvas from "./ThreeCanvas";
 import ViolinPlot from "./ViolinPlot";
 import PolarHistogram from "./PolarHistogram";
+import VisualRepresentation from "./visual_representation/VisualRepresentation";
 
 function App() {
+  VisualRepresentation.initialize();
+
   const [selectedFile, setSelectedFile] = useState("");
   const [selectedObserverId, setSelectedObserverId] = useState("");
   const [selectedObserverIds, setSelectedObserverIds] = useState(
