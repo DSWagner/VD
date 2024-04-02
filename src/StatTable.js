@@ -41,10 +41,12 @@ const StatTable = ({
           // Check if the item has the attribute "observer id" and if it's included in selectedObserverIds
           if (
             observer["observer id"].toString() &&
-            selectedObserverIds.includes(observer["observer id"].toString())
+            selectedObserverIds.some((idsArray) =>
+              idsArray.includes(observer["observer id"])
+            )
           ) {
             // Print the "observer id"
-            console.log(observer["observer id"]);
+            console.log("STAT: ", observer["observer id"]);
 
             const model = observer.condition.model;
             const material = observer.condition.material;
