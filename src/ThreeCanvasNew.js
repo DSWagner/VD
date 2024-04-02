@@ -97,131 +97,124 @@ const ThreeCanvasNew = ({
     // Initialize scene, camera, and renderer
     const scene = sceneRef.current;
 
-    observerIds.forEach((observerId, index) => {
-      if (observerId) {
-        // Create a shallow copy of scene.children to safely iterate over
-        const childrenCopy = scene.children.slice();
+    observerIds.forEach((observerIdGroup, index) => {
+      if (observerIdGroup) {
+        observerIdGroup.forEach((observerId) => {
+          // Create a shallow copy of scene.children to safely iterate over
+          const childrenCopy = scene.children.slice();
 
-        childrenCopy.forEach((child) => {
-          // Assuming statVizFlags is an array with the same length as the number of fixation elements
-          if (child.name === `stat-fixation-${index}`) {
-            scene.remove(child); // Remove the child from the scene
-          }
-        });
-
-        // Calculate the rotation angle in radians
-        const degrees = (index - 3) * 15;
-        const radians = degrees * (Math.PI / 180);
-
-        // Get the original camera position
-        const originalPosition = cameraPosRef.current.clone();
-
-        // Create a rotation matrix for rotating around the Y axis
-        const rotationMatrix = new THREE.Matrix4();
-        rotationMatrix.makeRotationY(radians);
-
-        // Apply the rotation to the camera position
-        // Note: This assumes the focus point is at the origin. If not, you would need to translate the camera position to the focus point, apply the rotation, and then translate back.
-        const rotatedPosition = originalPosition.applyMatrix4(rotationMatrix);
-
-        const geometry = new THREE.SphereGeometry(10, 32, 32);
-        const material = new THREE.MeshBasicMaterial({
-          // color: colors.directions[index % colors.directions.length],
-          color:
-            directionColors[index] != null ? directionColors[index] : "#ffffff",
-        });
-        const sphere = new THREE.Mesh(geometry, material);
-        sphere.position.copy(rotatedPosition);
-        sphere.name = `direction-${index}`;
-        scene.add(sphere);
-
-        const jsonFileName = modelFileName.replace(".stl", ".json");
-        const jsonFilePath = `${process.env.PUBLIC_URL}/Dataset/gazePerObject/${jsonFileName}`;
-
-        function addFixationSpheres(fixations, offset, matrix, direction) {
-          // Invert the matrix to apply the rotation in the opposite direction
-          const invertedMatrix = matrix.clone().invert();
-
-          fixations.forEach((fixation) => {
-            const position = fixation.position;
-            const radius = Math.max(1, (fixation.duration * 10) / 1000);
-            const geometry = new THREE.SphereGeometry(radius, 32, 32); // Adjust the size as needed
-            const material = new THREE.MeshBasicMaterial({
-              // color: colors.directions[index % colors.directions.length],
-              color:
-                directionColors[index] != null
-                  ? directionColors[index]
-                  : "#ffffff",
-            }); // Red color for visibility
-            const sphere = new THREE.Mesh(geometry, material);
-
-            sphere.position.x = position[0] - offset[0];
-            sphere.position.y = position[1] - offset[1];
-            sphere.position.z = position[2] - offset[2];
-
-            // Apply the inverted matrix to each sphere
-            sphere.applyMatrix4(invertedMatrix);
-
-            sphere.name = `stat-fixation-${direction}`;
-
-            sphere.visible = statVizFlags[index];
-
-            // Add the sphere to the scene
-            sceneRef.current.add(sphere);
+          childrenCopy.forEach((child) => {
+            // Assuming statVizFlags is an array with the same length as the number of fixation elements
+            if (child.name === `stat-fixation-${index}`) {
+              scene.remove(child); // Remove the child from the scene
+            }
           });
-        }
 
-        // Fetch the JSON file
-        fetch(jsonFilePath)
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-          })
-          .then((data) => {
-            // Assuming 'data' is the array of objects
-            const matchingObject = data.find(
-              (item) => item["observer id"].toString() === observerId.toString()
-            );
-            if (matchingObject) {
-              // Access and log the orientation from the matching object
-              const orientation = matchingObject.condition.orientation;
+          // Calculate the rotation angle in radians
+          const degrees = (index - 3) * 15;
+          const radians = degrees * (Math.PI / 180);
 
-              const offset = matchingObject.condition.offset;
+          // Get the original camera position
+          const originalPosition = cameraPosRef.current.clone();
 
-              // Creating a Matrix4 from the 3x3 rotation matrix
-              const matrix = new THREE.Matrix4();
-              matrix.set(
-                orientation[0],
-                orientation[1],
-                orientation[2],
-                0,
-                orientation[3],
-                orientation[4],
-                orientation[5],
-                0,
-                orientation[6],
-                orientation[7],
-                orientation[8],
-                0,
-                0,
-                0,
-                0,
-                1
+          // Create a rotation matrix for rotating around the Y axis
+          const rotationMatrix = new THREE.Matrix4();
+          rotationMatrix.makeRotationY(radians);
+
+          // Apply the rotation to the camera position
+          const rotatedPosition = originalPosition.applyMatrix4(rotationMatrix);
+
+          const geometry = new THREE.SphereGeometry(10, 32, 32);
+          const material = new THREE.MeshBasicMaterial({
+            color:
+              directionColors[index] != null
+                ? directionColors[index]
+                : "#ffffff",
+          });
+          const sphere = new THREE.Mesh(geometry, material);
+          sphere.position.copy(rotatedPosition);
+          sphere.name = `direction-${index}`;
+          scene.add(sphere);
+
+          const jsonFileName = modelFileName.replace(".stl", ".json");
+          const jsonFilePath = `${process.env.PUBLIC_URL}/Dataset/gazePerObject/${jsonFileName}`;
+
+          function addFixationSpheres(fixations, offset, matrix, direction) {
+            const invertedMatrix = matrix.clone().invert();
+
+            fixations.forEach((fixation) => {
+              const position = fixation.position;
+              const radius = Math.max(1, (fixation.duration * 10) / 1000);
+              const geometry = new THREE.SphereGeometry(radius, 32, 32);
+              const material = new THREE.MeshBasicMaterial({
+                color:
+                  directionColors[index] != null
+                    ? directionColors[index]
+                    : "#ffffff",
+              });
+              const sphere = new THREE.Mesh(geometry, material);
+
+              sphere.position.x = position[0] - offset[0];
+              sphere.position.y = position[1] - offset[1];
+              sphere.position.z = position[2] - offset[2];
+
+              sphere.applyMatrix4(invertedMatrix);
+
+              sphere.name = `stat-fixation-${direction}`;
+
+              sphere.visible = statVizFlags[index];
+
+              sceneRef.current.add(sphere);
+            });
+          }
+
+          // Fetch the JSON file
+          fetch(jsonFilePath)
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then((data) => {
+              const matchingObject = data.find(
+                (item) =>
+                  item["observer id"].toString() === observerId.toString()
               );
+              if (matchingObject) {
+                const orientation = matchingObject.condition.orientation;
+                const offset = matchingObject.condition.offset;
+                const matrix = new THREE.Matrix4();
+                matrix.set(
+                  orientation[0],
+                  orientation[1],
+                  orientation[2],
+                  0,
+                  orientation[3],
+                  orientation[4],
+                  orientation[5],
+                  0,
+                  orientation[6],
+                  orientation[7],
+                  orientation[8],
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                );
 
-              // Read and console log the fixations attribute
-              const fixations = matchingObject.fixations;
-              addFixationSpheres(fixations, offset, matrix, index);
-            } else {
-              console.log(
-                "No matching object found for observer ID:",
-                observerId
-              );
-            }
-          })
-          .catch((error) => console.error("Error loading JSON file:", error));
+                const fixations = matchingObject.fixations;
+                addFixationSpheres(fixations, offset, matrix, index);
+              } else {
+                console.log(
+                  "No matching object found for observer ID:",
+                  observerId
+                );
+              }
+            })
+            .catch((error) => console.error("Error loading JSON file:", error));
+        });
       }
     });
   }, [modelFileName, observerIds]); // Depend on modelFileName to re-trigger loading
@@ -332,205 +325,218 @@ const ThreeCanvasNew = ({
         }
       });
     } else {
-      const observerId = observerIds[direction];
-      console.log("KOKOT");
-      console.log("Observer ID: ", observerId);
+      const observerIdGroup = observerIds[direction];
+      console.log("Observer ID: ", observerIdGroup);
       console.log("FLAG: ", dynaVizFlags[direction]);
 
-      if (observerId) {
+      if (observerIdGroup) {
         const jsonFileName = modelFileName.replace(".stl", ".json");
         const jsonFilePath = `${process.env.PUBLIC_URL}/Dataset/gazePerObject/${jsonFileName}`;
 
-        let lastCylinderPosition = null; // Outside the function, to keep track of the last cylinder's position
-        function addFixationSpheres(
-          fixations,
-          offset,
-          matrix,
-          direction,
-          index = 0
-        ) {
-          // Base case: if index is out of bounds, return to stop the recursion
-          if (index >= fixations.length) {
-            return;
-          }
-
-          const fixation = fixations[index];
-          const invertedMatrix = matrix.clone().invert();
-          const position = fixation.position;
-          const radius = Math.max(1, (fixation.duration * 10) / 1000);
-          const geometry = new THREE.CylinderGeometry(
-            radius,
-            radius,
-            fixation.duration / 20,
-            32
-          );
-          const material = new THREE.MeshBasicMaterial({
-            color:
-              directionColors[direction] != null
-                ? directionColors[direction]
-                : "#ffffff",
-          });
-          const cylinder = new THREE.Mesh(geometry, material);
-
-          cylinder.position.x = position[0] - offset[0];
-          cylinder.position.y = position[1] - offset[1];
-          cylinder.position.z = position[2] - offset[2];
-          cylinder.applyMatrix4(invertedMatrix);
-          cylinder.name = `dyna-fixation-${direction}`;
-          // sceneRef.current.add(sphere);
-
-          const observerChild = scene.children.find(
-            (child) => child.name === `direction-${direction}`
-          );
-
-          if (observerChild) {
-            const observerPosition = observerChild.position;
-            const vectorFromModelToObserver = new THREE.Vector3().subVectors(
-              observerPosition,
-              centerRef.current
-            );
-
-            const targetPosition = new THREE.Vector3().addVectors(
-              cylinder.position,
-              vectorFromModelToObserver
-            );
-            cylinder.lookAt(targetPosition);
-            cylinder.rotateX(Math.PI / 2);
-
-            // Calculate the projection of sphere.position onto vectorFromModelToObserver
-            const projectionScalar =
-              cylinder.position.dot(vectorFromModelToObserver) /
-              vectorFromModelToObserver.lengthSq();
-            console.log(projectionScalar);
-            const projectionVector = vectorFromModelToObserver
-              .clone()
-              .multiplyScalar(projectionScalar);
-
-            // Calculate the distance from the projection point to the origin of the vector
-            const originToProjectionDistance = projectionVector.length();
-            // Move the sphere by this distance in the opposite direction of the vector
-            let moveDirection = vectorFromModelToObserver.normalize();
-            moveDirection =
-              projectionScalar >= 0 ? moveDirection.negate() : moveDirection;
-            const moveVector = moveDirection.multiplyScalar(
-              originToProjectionDistance
-            );
-            cylinder.position.add(moveVector);
-
-            // Now, apply an incremental distance to the sphere in the direction of vectorFromModelToObserver
-            // Normalize the vector for direction, and scale it by the incremental distance
-            const incrementalMoveVector =
-              projectionScalar >= 0
-                ? vectorFromModelToObserver.normalize().negate()
-                : vectorFromModelToObserver.normalize();
-            let increment = 100 + fixation["start timestamp"] * 50;
-            let incrementaDistance = incrementalMoveVector
-              .clone()
-              .multiplyScalar(increment);
-            cylinder.position.add(incrementaDistance);
-
-            const currentCylinderPosition = cylinder.position.clone();
-
-            increment = fixation.duration / 40;
-            incrementaDistance = incrementalMoveVector
-              .clone()
-              .multiplyScalar(increment);
-            cylinder.position.add(incrementaDistance);
-
-            // Check if there's a previous cylinder to connect to
-            if (lastCylinderPosition) {
-              // Create a geometry that represents a line between the last cylinder and the current one
-              const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-                lastCylinderPosition,
-                currentCylinderPosition,
-              ]);
-
-              // Use the same material color as the cylinder
-              const lineMaterial = new THREE.LineBasicMaterial({
-                color:
-                  directionColors[direction] != null
-                    ? directionColors[direction]
-                    : "#ffffff",
-              });
-
-              // Create the line and add it to the scene
-              const line = new THREE.Line(lineGeometry, lineMaterial);
-              line.name = `line-${direction}`;
-              sceneRef.current.add(line);
+        observerIdGroup.forEach((observerId) => {
+          // Iterate through each observerId in the group
+          let lastCylinderPosition = null; // Outside the function, to keep track of the last cylinder's position
+          function addFixationSpheres(
+            fixations,
+            offset,
+            matrix,
+            direction,
+            index = 0
+          ) {
+            // Base case: if index is out of bounds, return to stop the recursion
+            if (index >= fixations.length) {
+              return;
             }
-            lastCylinderPosition = cylinder.position
-              .clone()
-              .sub(incrementalMoveVector.clone().multiplyScalar(-increment));
-            sceneRef.current.add(cylinder);
-          }
 
-          const delay = fixations[index + 1]
-            ? (fixations[index + 1]["start timestamp"] -
-                fixations[index]["start timestamp"]) *
-              1000
-            : fixation.duration;
-
-          // Recursive call with the next index
-          setTimeout(() => {
-            addFixationSpheres(fixations, offset, matrix, direction, index + 1);
-          }, delay);
-        }
-
-        // Fetch the JSON file
-        fetch(jsonFilePath)
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-          })
-          .then((data) => {
-            // Assuming 'data' is the array of objects
-            const matchingObject = data.find(
-              (item) => item["observer id"].toString() === observerId.toString()
+            const fixation = fixations[index];
+            const invertedMatrix = matrix.clone().invert();
+            const position = fixation.position;
+            const radius = Math.max(1, (fixation.duration * 10) / 1000);
+            const geometry = new THREE.CylinderGeometry(
+              radius,
+              radius,
+              fixation.duration / 20,
+              32
             );
-            if (matchingObject) {
-              // Access and log the orientation from the matching object
-              const orientation = matchingObject.condition.orientation;
+            const material = new THREE.MeshBasicMaterial({
+              color:
+                directionColors[direction] != null
+                  ? directionColors[direction]
+                  : "#ffffff",
+              opacity: 0.6, // Set opacity to 75%
+              transparent: true, // Enable transparency
+            });
+            const cylinder = new THREE.Mesh(geometry, material);
 
-              const offset = matchingObject.condition.offset;
+            cylinder.position.x = position[0] - offset[0];
+            cylinder.position.y = position[1] - offset[1];
+            cylinder.position.z = position[2] - offset[2];
+            cylinder.applyMatrix4(invertedMatrix);
+            cylinder.name = `dyna-fixation-${direction}`;
+            // sceneRef.current.add(sphere);
 
-              // Creating a Matrix4 from the 3x3 rotation matrix
-              const matrix = new THREE.Matrix4();
-              matrix.set(
-                orientation[0],
-                orientation[1],
-                orientation[2],
-                0,
-                orientation[3],
-                orientation[4],
-                orientation[5],
-                0,
-                orientation[6],
-                orientation[7],
-                orientation[8],
-                0,
-                0,
-                0,
-                0,
-                1
+            const observerChild = scene.children.find(
+              (child) => child.name === `direction-${direction}`
+            );
+
+            if (observerChild) {
+              const observerPosition = observerChild.position;
+              const vectorFromModelToObserver = new THREE.Vector3().subVectors(
+                observerPosition,
+                centerRef.current
               );
 
-              // Read and console log the fixations attribute
-              const fixations = matchingObject.fixations;
-              if (fixations) {
-                setTimeout(() => {
-                  addFixationSpheres(fixations, offset, matrix, direction);
-                }, fixations[0]["start timestamp"] * 1000);
+              const targetPosition = new THREE.Vector3().addVectors(
+                cylinder.position,
+                vectorFromModelToObserver
+              );
+              cylinder.lookAt(targetPosition);
+              cylinder.rotateX(Math.PI / 2);
+
+              // Calculate the projection of sphere.position onto vectorFromModelToObserver
+              const projectionScalar =
+                cylinder.position.dot(vectorFromModelToObserver) /
+                vectorFromModelToObserver.lengthSq();
+              console.log(projectionScalar);
+              const projectionVector = vectorFromModelToObserver
+                .clone()
+                .multiplyScalar(projectionScalar);
+
+              // Calculate the distance from the projection point to the origin of the vector
+              const originToProjectionDistance = projectionVector.length();
+              // Move the sphere by this distance in the opposite direction of the vector
+              let moveDirection = vectorFromModelToObserver.normalize();
+              moveDirection =
+                projectionScalar >= 0 ? moveDirection.negate() : moveDirection;
+              const moveVector = moveDirection.multiplyScalar(
+                originToProjectionDistance
+              );
+              cylinder.position.add(moveVector);
+
+              // Now, apply an incremental distance to the sphere in the direction of vectorFromModelToObserver
+              // Normalize the vector for direction, and scale it by the incremental distance
+              const incrementalMoveVector =
+                projectionScalar >= 0
+                  ? vectorFromModelToObserver.normalize().negate()
+                  : vectorFromModelToObserver.normalize();
+              let increment = 100 + fixation["start timestamp"] * 50;
+              let incrementaDistance = incrementalMoveVector
+                .clone()
+                .multiplyScalar(increment);
+              cylinder.position.add(incrementaDistance);
+
+              const currentCylinderPosition = cylinder.position.clone();
+
+              increment = fixation.duration / 40;
+              incrementaDistance = incrementalMoveVector
+                .clone()
+                .multiplyScalar(increment);
+              cylinder.position.add(incrementaDistance);
+
+              // Check if there's a previous cylinder to connect to
+              if (lastCylinderPosition) {
+                // Create a geometry that represents a line between the last cylinder and the current one
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+                  lastCylinderPosition,
+                  currentCylinderPosition,
+                ]);
+
+                // Use the same material color as the cylinder
+                const lineMaterial = new THREE.LineBasicMaterial({
+                  color:
+                    directionColors[direction] != null
+                      ? directionColors[direction]
+                      : "#ffffff",
+                  opacity: 0.6, // Set opacity to 75%
+                  transparent: true, // Enable transparency
+                });
+
+                // Create the line and add it to the scene
+                const line = new THREE.Line(lineGeometry, lineMaterial);
+                line.name = `line-${direction}`;
+                sceneRef.current.add(line);
               }
-            } else {
-              console.log(
-                "No matching object found for observer ID:",
-                observerId
-              );
+              lastCylinderPosition = cylinder.position
+                .clone()
+                .sub(incrementalMoveVector.clone().multiplyScalar(-increment));
+              sceneRef.current.add(cylinder);
             }
-          })
-          .catch((error) => console.error("Error loading JSON file:", error));
+
+            const delay = fixations[index + 1]
+              ? (fixations[index + 1]["start timestamp"] -
+                  fixations[index]["start timestamp"]) *
+                1000
+              : fixation.duration;
+
+            // Recursive call with the next index
+            setTimeout(() => {
+              addFixationSpheres(
+                fixations,
+                offset,
+                matrix,
+                direction,
+                index + 1
+              );
+            }, delay);
+          }
+
+          // Fetch the JSON file
+          fetch(jsonFilePath)
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then((data) => {
+              // Assuming 'data' is the array of objects
+              const matchingObject = data.find(
+                (item) =>
+                  item["observer id"].toString() === observerId.toString()
+              );
+              if (matchingObject) {
+                // Access and log the orientation from the matching object
+                const orientation = matchingObject.condition.orientation;
+
+                const offset = matchingObject.condition.offset;
+
+                // Creating a Matrix4 from the 3x3 rotation matrix
+                const matrix = new THREE.Matrix4();
+                matrix.set(
+                  orientation[0],
+                  orientation[1],
+                  orientation[2],
+                  0,
+                  orientation[3],
+                  orientation[4],
+                  orientation[5],
+                  0,
+                  orientation[6],
+                  orientation[7],
+                  orientation[8],
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                );
+
+                // Read and console log the fixations attribute
+                const fixations = matchingObject.fixations;
+                if (fixations) {
+                  setTimeout(() => {
+                    addFixationSpheres(fixations, offset, matrix, direction);
+                  }, fixations[0]["start timestamp"] * 1000);
+                }
+              } else {
+                console.log(
+                  "No matching object found for observer ID:",
+                  observerId
+                );
+              }
+            })
+            .catch((error) => console.error("Error loading JSON file:", error));
+        });
       }
     }
 

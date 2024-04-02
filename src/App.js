@@ -137,17 +137,6 @@ function App() {
                 dynaVizFlags={dynaVizFlags}
                 directionColors={directionColors}
               />
-              {/*<ThreeCanvas
-                observerId={selectedObserverId}
-                modelFileName={selectedFile}
-                timeViz={timeViz}
-                setTimeViz={setTimeViz}
-                obsPos={obsPos}
-                setObsPos={setObsPos}
-                tableData={tableData}
-                setTableData={setTableData}
-              />
-          */}
             </>
           )}
         </div>

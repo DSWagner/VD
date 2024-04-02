@@ -327,7 +327,9 @@ const ThreeCanvas = ({
             lastSphere.position,
             sphere.position,
           ]);
-          const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+          const lineMaterial = new THREE.LineBasicMaterial({
+            color: 0xffffff,
+          });
           const line = new THREE.Line(lineGeometry, lineMaterial);
           line.name = "line";
           scene.add(line);
