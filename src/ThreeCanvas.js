@@ -10,8 +10,6 @@ const ThreeCanvas = ({
   setTimeViz,
   obsPos,
   setObsPos,
-  tableData,
-  setTableData,
 }) => {
   const sceneRef = useRef(new THREE.Scene());
   const cameraRef = useRef(
@@ -37,46 +35,6 @@ const ThreeCanvas = ({
     // Append the renderer to the canvas div
     canvasRef.current.innerHTML = ""; // Clear the canvas container
     canvasRef.current.appendChild(renderer.domElement);
-
-    function getTableData(matchingObject, fixations) {
-      const model = matchingObject.condition.model;
-      const material = matchingObject.condition.material;
-      const direction = matchingObject.condition.direction;
-      const duration = (
-        fixations.reduce((totalDuration, fixation) => {
-          return totalDuration + fixation.duration;
-        }, 0) / 1000
-      ).toFixed(2);
-      const minDuration = (
-        Math.min(...fixations.map((fixation) => fixation.duration)) / 1000
-      ).toFixed(2);
-      const maxDuration = (
-        Math.max(...fixations.map((fixation) => fixation.duration)) / 1000
-      ).toFixed(2);
-      const avgDuration = (duration / fixations.length).toFixed(2);
-      console.log(`ID poz.: ${observerId}`);
-      console.log(`Model: ${model}`);
-      console.log(`Mat: ${material}`);
-      console.log(`Uhol: ${direction} (${(direction - 3) * 15}°)`);
-      console.log(`Dĺžka poz.: ${duration}s`);
-      console.log(`Min. čas fix.: ${minDuration}s`);
-      console.log(`Avg. čas fix.: ${avgDuration}s`);
-      console.log(`Max. čas fix.: ${maxDuration}s`);
-
-      const row = [
-        observerId,
-        model,
-        material,
-        direction,
-        duration,
-        minDuration,
-        avgDuration,
-        maxDuration,
-      ];
-      console.log(tableData);
-      const tmpTableData = [tableData[0], row];
-      setTableData(tmpTableData);
-    }
 
     // Load the STL model
     const loader = new STLLoader();
@@ -219,7 +177,6 @@ const ThreeCanvas = ({
               const fixations = matchingObject.fixations;
               // console.log(matchingObject);
               // console.log(fixations);
-              getTableData(matchingObject, fixations);
 
               // console.log("Fixations:", fixations);
               addFixationSpheres(fixations, offset, matrix, rotationRadians);
@@ -255,7 +212,7 @@ const ThreeCanvas = ({
       renderer.dispose(); // Dispose of the renderer
       controls.dispose();
     };
-  // }, [observerId, modelFileName, tableData, setTableData]); // Depend on modelFileName to re-trigger loading
+    // }, [observerId, modelFileName, tableData, setTableData]); // Depend on modelFileName to re-trigger loading
   }, [observerId, modelFileName]); // Depend on modelFileName to re-trigger loading
 
   useEffect(() => {
@@ -370,7 +327,9 @@ const ThreeCanvas = ({
             lastSphere.position,
             sphere.position,
           ]);
-          const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+          const lineMaterial = new THREE.LineBasicMaterial({
+            color: 0xffffff,
+          });
           const line = new THREE.Line(lineGeometry, lineMaterial);
           line.name = "line";
           scene.add(line);
