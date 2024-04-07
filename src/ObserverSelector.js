@@ -97,6 +97,10 @@ const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
             ...provided,
             color: "black", // This sets the selected item's font color to black
           }),
+          // control: (provided) => ({
+          //   ...provided,
+          //   width: "50%", // Set the width of the Select component to 50%
+          // }),
           // Add more custom styles if needed
         }}
       />

@@ -46,6 +46,8 @@ function App() {
   const [directionColors, setDirectionColors] = useState(
     initialDirectionColors
   ); // Initialize state for observer colors
+  const [paramFlag, setParamFlag] = useState(6);
+  const [sliderValue, setSliderValue] = useState(50);
 
   const handleFileSelected = (file) => {
     setSelectedFile(file);
@@ -83,10 +85,33 @@ function App() {
     setIsExpandedPolar(!isExpandedPolar);
   };
 
+  const handleParameters = () => {
+    console.log("Parameters button clicked, ", paramFlag);
+    // Add any logic here that you want to execute when the button is clicked
+
+    if (paramFlag === 6) {
+      setParamFlag(5);
+    } else {
+      setParamFlag(6);
+    }
+  };
+
   return (
     <div className="App container-fluid" style={{ margin: 0 }}>
-      <div className="row header">
+      {/* <div className="row header">
         <h1>Vizualizácia 3D eye-tracking dát</h1>
+      </div> */}
+      <div className="row">
+        <div>Zvoľte si 3D objekt na vizualizáciu</div>
+        <div>
+          <ModelSelector onFileSelected={handleFileSelected} />
+          {selectedFile && (
+            <button style={{ marginLeft: "10px" }} onClick={handleParameters}>
+              Parametre
+            </button>
+          )}
+          {/* Add this line */}
+        </div>
       </div>
 
       <div className="row">
@@ -125,8 +150,7 @@ function App() {
             </>
           )}
         </div>
-
-        <div className="col-5">
+        <div className={`col-${paramFlag.toString()}`}>
           {selectedFile && (
             <>
               <ThreeCanvasNew
@@ -136,52 +160,64 @@ function App() {
                 statVizFlags={statVizFlags}
                 dynaVizFlags={dynaVizFlags}
                 directionColors={directionColors}
+                paramFlag={paramFlag}
+                sliderValue={sliderValue}
               />
             </>
           )}
         </div>
-
-        <div className="col-3">
-          <div className="row">
-            <div>Zvoľte si 3D objekt na vizualizáciu</div>
-            <div>
-              <ModelSelector onFileSelected={handleFileSelected} />
+        {paramFlag - 6 != 0 && (
+          <div className="col-3">
+            <div className="row">
+              {selectedFile && ( // Only show the observer selector if a file is selected
+                <>
+                  <div>Zvoľte si ID pozorovateľov</div>
+                  <ParametersTab
+                    modelFileName={selectedFile}
+                    observerIds={selectedObserverIds}
+                    setObserverIds={setSelectedObserverIds}
+                    setCameraPos={setCameraPos}
+                    statVizFlags={statVizFlags}
+                    setStatVizFlags={setStatVizFlags}
+                    dynaVizFlags={dynaVizFlags}
+                    setDynaVizFlags={setDynaVizFlags}
+                    directionColors={directionColors}
+                    setDirectionColors={setDirectionColors}
+                  />
+                  {/* Slider element added below */}
+                  <div
+                    className="slider-container"
+                    style={{ marginTop: "20px" }}
+                  >
+                    <input
+                      type="range"
+                      min="100"
+                      max="400"
+                      value={sliderValue}
+                      onChange={(e) => setSliderValue(e.target.value)}
+                      className="slider"
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+                </>
+              )}
+              {selectedObserverId && ( // Only show the observer ID if it is selected
+                <>
+                  {/* <div>Zvolené ID pozorovateľa: {selectedObserverId}</div> */}
+                  {/* Conditional button rendering */}
+                  <div>
+                    <button onClick={handleVisualizationClick}>
+                      Vizualizácia v čase
+                    </button>
+                  </div>
+                  <div>
+                    <button onClick={handleObsPosClick}>Pozorovateľ</button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
-          <div className="row">
-            {selectedFile && ( // Only show the observer selector if a file is selected
-              <>
-                <div>Zvoľte si ID pozorovateľov</div>
-                <ParametersTab
-                  modelFileName={selectedFile}
-                  observerIds={selectedObserverIds}
-                  setObserverIds={setSelectedObserverIds}
-                  setCameraPos={setCameraPos}
-                  statVizFlags={statVizFlags}
-                  setStatVizFlags={setStatVizFlags}
-                  dynaVizFlags={dynaVizFlags}
-                  setDynaVizFlags={setDynaVizFlags}
-                  directionColors={directionColors}
-                  setDirectionColors={setDirectionColors}
-                />
-              </>
-            )}
-            {selectedObserverId && ( // Only show the observer ID if it is selected
-              <>
-                {/* <div>Zvolené ID pozorovateľa: {selectedObserverId}</div> */}
-                {/* Conditional button rendering */}
-                <div>
-                  <button onClick={handleVisualizationClick}>
-                    Vizualizácia v čase
-                  </button>
-                </div>
-                <div>
-                  <button onClick={handleObsPosClick}>Pozorovateľ</button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
