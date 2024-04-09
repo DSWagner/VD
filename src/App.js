@@ -12,12 +12,9 @@ import colors from "./colors.json";
 
 function App() {
   const [selectedFile, setSelectedFile] = useState("");
-  const [selectedObserverId, setSelectedObserverId] = useState("");
   const [selectedObserverIds, setSelectedObserverIds] = useState(
     Array(7).fill("")
   );
-  const [timeViz, setTimeViz] = useState(false);
-  const [obsPos, setObsPos] = useState(false);
   const [tableData, setTableData] = useState([
     [
       "ID poz.",
@@ -56,21 +53,7 @@ function App() {
     setStatVizFlags(Array(7).fill(false));
     setDynaVizFlags(Array(7).fill(false));
     setCameraPos();
-    setSelectedObserverId(""); // Reset observer ID when a new file is selected
     // setDirectionColors({});
-  };
-
-  // const handleObserverSelected = (observerId) => {
-  //   setSelectedObserverId(observerId);
-  // };
-
-  // Handler for the visualization button
-  const handleVisualizationClick = () => {
-    setTimeViz(true);
-  };
-
-  const handleObsPosClick = () => {
-    setObsPos(true);
   };
 
   const handleExpandTable = () => {
@@ -225,20 +208,20 @@ function App() {
                       className="slider"
                       style={{ width: "100%" }}
                     />
-                  </div>
-                </>
-              )}
-              {selectedObserverId && ( // Only show the observer ID if it is selected
-                <>
-                  {/* <div>Zvolené ID pozorovateľa: {selectedObserverId}</div> */}
-                  {/* Conditional button rendering */}
-                  <div>
-                    <button onClick={handleVisualizationClick}>
-                      Vizualizácia v čase
-                    </button>
-                  </div>
-                  <div>
-                    <button onClick={handleObsPosClick}>Pozorovateľ</button>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginTop: "10px",
+                      }}
+                    >
+                      <span>0s</span>
+                      <span>1s</span>
+                      <span>2s</span>
+                      <span>3s</span>
+                      <span>4s</span>
+                      <span>5s</span>
+                    </div>
                   </div>
                 </>
               )}

@@ -66,7 +66,14 @@ const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
         setObserverIds(ids);
       })
       .catch((error) => console.error("Failed to load observer IDs:", error));
+    // Reset selectedObserverIds when modelFileName changes
+    setSelectedObserverIds([]);
   }, [modelFileName, index]);
+
+  useEffect(() => {
+    // Reset selectedObserverIds when modelFileName changes
+    setSelectedObserverIds([]);
+  }, [modelFileName]); // Add modelFileName as a dependency
 
   const handleChange = (selectedOptions) => {
     setSelectedObserverIds(selectedOptions);

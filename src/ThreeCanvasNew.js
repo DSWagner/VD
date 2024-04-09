@@ -106,18 +106,17 @@ const ThreeCanvasNew = ({
     const scene = sceneRef.current;
 
     observerIds.forEach((observerIdGroup, index) => {
+      // Create a shallow copy of scene.children to safely iterate over
+      const childrenCopy = scene.children.slice();
+
+      childrenCopy.forEach((child) => {
+        // Assuming statVizFlags is an array with the same length as the number of fixation elements
+        if (child.name === `stat-fixation-${index}`) {
+          scene.remove(child); // Remove the child from the scene
+        }
+      });
       if (observerIdGroup) {
         observerIdGroup.forEach((observerId) => {
-          // Create a shallow copy of scene.children to safely iterate over
-          const childrenCopy = scene.children.slice();
-
-          childrenCopy.forEach((child) => {
-            // Assuming statVizFlags is an array with the same length as the number of fixation elements
-            if (child.name === `stat-fixation-${index}`) {
-              scene.remove(child); // Remove the child from the scene
-            }
-          });
-
           // Calculate the rotation angle in radians
           const degrees = (index - 3) * 15;
           const radians = degrees * (Math.PI / 180);
