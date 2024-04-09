@@ -46,26 +46,29 @@
 
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
+import VisualRepresentation from "./visual_representation/VisualRepresentation";
 
 const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
   const [observerIds, setObserverIds] = useState([]);
   const [selectedObserverIds, setSelectedObserverIds] = useState([]);
 
   useEffect(() => {
-    const jsonFilename = modelFileName.replace(".stl", ".json");
-    fetch(`${process.env.PUBLIC_URL}/Dataset/gazePerObject/${jsonFilename}`)
-      .then((response) => response.json())
-      .then((data) => {
-        const filteredData = data.filter(
-          (item) => item["condition"]["direction"] === index
-        );
-        const ids = filteredData.map((item) => ({
-          value: item["observer id"],
-          label: item["observer id"],
-        }));
-        setObserverIds(ids);
-      })
-      .catch((error) => console.error("Failed to load observer IDs:", error));
+    // const jsonFilename = modelFileName.replace(".stl", ".json");
+    // fetch(`${process.env.PUBLIC_URL}/Dataset/gazePerObject/${jsonFilename}`)
+    //   .then((response) => response.json())
+    //   .then((data) => {
+    //     const filteredData = data.filter(
+    //       (item) => item["condition"]["direction"] === index
+    //     );
+    //     const ids = filteredData.map((item) => ({
+    //       value: item["observer id"],
+    //       label: item["observer id"],
+    //     }));
+    //     setObserverIds(ids);
+    //   })
+    //   .catch((error) => console.error("Failed to load observer IDs:", error));
+
+      VisualRepresentation.getObservers(index).then((ids) => setObserverIds(ids));
   }, [modelFileName, index]);
 
   const handleChange = (selectedOptions) => {

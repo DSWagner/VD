@@ -41,11 +41,31 @@ export default class VisualRepresentation {
         }
     }
 
-    static getObservers(angle) {
-        if (VisualRepresentation.model === null)
+    static async getObservers(direction) {
+        if (VisualRepresentation.model === null) { // TODO: Fuu brasko
             return [];
+        }
 
-        const angleIndex = VisualRepresentation.config.setup.observing_angles.indexOf(angle);
+        // const jsonFilename = VisualRepresentation.model.modeName + ".json";
+        const jsonFilename = "bunny.json";
+
+        try {
+            const response = await fetch(`${process.env.PUBLIC_URL}/Dataset/gazePerObject/${jsonFilename}`);
+            const data = await response.json(); 
+            
+            return data
+                .filter((item) => item["condition"]["direction"] === direction)
+                .map((item) => ({
+                    value: item["observer id"],
+                    label: item["observer id"],
+                }));
+        }
+        catch (error) {
+            console.error("Failed to load observer IDs:", error)
+            return []
+        }
+        
+        // const angleIndex = VisualRepresentation.config.setup.observing_angles.indexOf(angle);
     }
 
     static setObserver(angle, observerId) {
