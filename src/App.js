@@ -32,8 +32,8 @@ function App() {
   ]);
   const [cameraPos, setCameraPos] = useState();
   const [isExpandedTable, setIsExpandedTable] = useState(false);
-  const [isExpandedViolin, setIsExpandedViolin] = useState(false);
-  const [isExpandedPolar, setIsExpandedPolar] = useState(false);
+  const [isExpandedStatSel, setIsExpandedStatSel] = useState(false);
+  const [isExpandedStatAll, setIsExpandedStatAll] = useState(false);
   const [statVizFlags, setStatVizFlags] = useState(Array(7).fill(false));
   const [dynaVizFlags, setDynaVizFlags] = useState(Array(7).fill(false));
   const initialDirectionColors = colors.directions.reduce(
@@ -77,12 +77,12 @@ function App() {
     setIsExpandedTable(!isExpandedTable);
   };
 
-  const handleExpandViolin = () => {
-    setIsExpandedViolin(!isExpandedViolin);
+  const handleExpandStatSel = () => {
+    setIsExpandedStatSel(!isExpandedStatSel);
   };
 
-  const handleExpandPolar = () => {
-    setIsExpandedPolar(!isExpandedPolar);
+  const handleExpandStatAll = () => {
+    setIsExpandedStatAll(!isExpandedStatAll);
   };
 
   const handleParameters = () => {
@@ -119,7 +119,12 @@ function App() {
           {selectedFile && (
             <>
               <div>
-                <button onClick={handleExpandTable}>Tabulka</button>
+                <button
+                  onClick={handleExpandTable}
+                  style={{ marginTop: "10px" }}
+                >
+                  Tabulka
+                </button>
                 {isExpandedTable && (
                   <StatTable
                     modelFileName={selectedFile}
@@ -130,21 +135,43 @@ function App() {
                 )}
               </div>
               <div>
-                <button onClick={handleExpandViolin}>Huslový graf</button>
-                {isExpandedViolin && (
-                  <ViolinPlot
-                    modelFileName={selectedFile}
-                    directionColors={directionColors}
-                  />
+                <button
+                  onClick={handleExpandStatSel}
+                  style={{ marginTop: "10px" }}
+                >
+                  Vizualizácia zvolenych pozorovateľov
+                </button>
+                {isExpandedStatSel && (
+                  <div>
+                    <ViolinPlot
+                      modelFileName={selectedFile}
+                      directionColors={directionColors}
+                    />
+                    <PolarHistogram
+                      modelFileName={selectedFile}
+                      directionColors={directionColors}
+                    />
+                  </div>
                 )}
               </div>
               <div>
-                <button onClick={handleExpandPolar}>Polárny histogram</button>
-                {isExpandedPolar && (
-                  <PolarHistogram
-                    modelFileName={selectedFile}
-                    directionColors={directionColors}
-                  />
+                <button
+                  onClick={handleExpandStatAll}
+                  style={{ marginTop: "10px" }}
+                >
+                  Vizualizácia všetkých pozorovateľov
+                </button>
+                {isExpandedStatAll && (
+                  <div>
+                    <ViolinPlot
+                      modelFileName={selectedFile}
+                      directionColors={directionColors}
+                    />
+                    <PolarHistogram
+                      modelFileName={selectedFile}
+                      directionColors={directionColors}
+                    />
+                  </div>
                 )}
               </div>
             </>
