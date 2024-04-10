@@ -69,6 +69,7 @@ const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
     //   .catch((error) => console.error("Failed to load observer IDs:", error));
 
       VisualRepresentation.getObservers(index).then((ids) => setObserverIds(ids));
+      setSelectedObserverIds([]);
   }, [modelFileName, index]);
 
   useEffect(() => {
