@@ -1,10 +1,14 @@
 import Model from './Model';
 import Observer from './Observer';
+import * as THREE from "three";
 
 export default class VisualRepresentation {
-    static model;
+    static model = null
     static observers;
     static config = require('./Config.json');
+    static scene = new THREE.Scene();;
+    static camera = new THREE.PerspectiveCamera(60, 1, 0.1, 10000);
+    static renderer = new THREE.WebGLRenderer({ antialias: true });
 
     /**
      * Initializes empty representation, with only basic observer data.
@@ -18,14 +22,16 @@ export default class VisualRepresentation {
     /**
      * Loads the requested model along with all related data into the visual representation.
      * @param {string} modelName The file name of the model
-     * @returns {void}
+     * @returns {Promise<THREE.Vector3>}
     */
-    static loadModel(modelName) {
+    static loadModelAsync(modelName) {
         VisualRepresentation.model = new Model(modelName);
 
         for (var observer in VisualRepresentation.observers) {
             observer.loadData(VisualRepresentation.model);
         }
+        console.log(VisualRepresentation.model.loadPromise)
+        return VisualRepresentation.model.loadPromise;
     }
 
     static async getModels() {

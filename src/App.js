@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import "./App.css";
 import ModelSelector from "./ModelSelector";
-import ThreeCanvas from "./ThreeCanvas";
 import ThreeCanvasNew from "./ThreeCanvasNew";
 import ViolinPlot from "./ViolinPlot";
 import PolarHistogram from "./PolarHistogram";

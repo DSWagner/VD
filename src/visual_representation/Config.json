@@ -17,5 +17,7 @@
                 "size": 10
             }
         }
-    }
+    },
+    "data_path_model": "/Dataset/3d_models/",
+    "data_path_gaze": "/Dataset/gazePerObject/"
 }
