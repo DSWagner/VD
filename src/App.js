@@ -32,8 +32,10 @@ function App() {
   ]);
   const [cameraPos, setCameraPos] = useState();
   const [isExpandedTable, setIsExpandedTable] = useState(false);
-  const [isExpandedStatSel, setIsExpandedStatSel] = useState(false);
-  const [isExpandedStatAll, setIsExpandedStatAll] = useState(false);
+  const [isExpandedPolar, setisExpandedPolar] = useState(false);
+  const [isCheckboxCheckedViolin, setisCheckboxCheckedViolin] = useState(false);
+  const [isCheckboxCheckedPolar, setisCheckboxCheckedPolar] = useState(false);
+  const [isExpandedViolin, setisExpandedViolin] = useState(false);
   const [statVizFlags, setStatVizFlags] = useState(Array(7).fill(false));
   const [dynaVizFlags, setDynaVizFlags] = useState(Array(7).fill(false));
   const initialDirectionColors = colors.directions.reduce(
@@ -77,12 +79,20 @@ function App() {
     setIsExpandedTable(!isExpandedTable);
   };
 
-  const handleExpandStatSel = () => {
-    setIsExpandedStatSel(!isExpandedStatSel);
+  const handleExpandStatViolin = () => {
+    setisExpandedViolin(!isExpandedViolin);
   };
 
-  const handleExpandStatAll = () => {
-    setIsExpandedStatAll(!isExpandedStatAll);
+  const handleExpandStatPolar = () => {
+    setisExpandedPolar(!isExpandedPolar);
+  };
+
+  const handleCheckboxChangeViolin = () => {
+    setisCheckboxCheckedViolin(!isCheckboxCheckedViolin);
+  };
+
+  const handleCheckboxChangePolar = () => {
+    setisCheckboxCheckedPolar(!isCheckboxCheckedPolar);
   };
 
   const handleParameters = () => {
@@ -136,43 +146,56 @@ function App() {
               </div>
               <div>
                 <button
-                  onClick={handleExpandStatSel}
+                  onClick={handleExpandStatViolin}
                   style={{ marginTop: "10px" }}
                 >
-                  Vizualizácia zvolenych pozorovateľov
+                  Violin Plot
                 </button>
-                {isExpandedStatSel && (
+                {isExpandedViolin && (
                   <div>
+                    <label>
+                    <input
+                      type="checkbox"
+                      checked={isCheckboxCheckedViolin}
+                      onChange={handleCheckboxChangeViolin}
+                    />
+                    Zobrazit zvolenych observerov
+                    </label>
                     <ViolinPlot
                       modelFileName={selectedFile}
                       directionColors={directionColors}
-                    />
-                    <PolarHistogram
-                      modelFileName={selectedFile}
-                      directionColors={directionColors}
+                      isSelected={isCheckboxCheckedViolin}
+                      selectedObserverIds={selectedObserverIds}
                     />
                   </div>
-                )}
+                  )}
               </div>
+
               <div>
                 <button
-                  onClick={handleExpandStatAll}
+                  onClick={handleExpandStatPolar}
                   style={{ marginTop: "10px" }}
                 >
-                  Vizualizácia všetkých pozorovateľov
+                  Polar Histogram
                 </button>
-                {isExpandedStatAll && (
+                {isExpandedPolar && (
                   <div>
-                    <ViolinPlot
-                      modelFileName={selectedFile}
-                      directionColors={directionColors}
+                    <label>
+                    <input
+                      type="checkbox"
+                      checked={isCheckboxCheckedPolar}
+                      onChange={handleCheckboxChangePolar}
                     />
+                    Zobrazit zvolenych observerov
+                    </label>
                     <PolarHistogram
                       modelFileName={selectedFile}
                       directionColors={directionColors}
+                      isSelected={isCheckboxCheckedPolar}
+                      selectedObserverIds={selectedObserverIds} 
                     />
                   </div>
-                )}
+                  )}
               </div>
             </>
           )}

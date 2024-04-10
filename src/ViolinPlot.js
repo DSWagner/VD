@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import Plot from "plotly.js-dist-min";
 
-const ViolinPlot = ({ modelFileName, directionColors }) => {
+const ViolinPlot = ({ modelFileName, directionColors, isSelected, selectedObserverIds}) => {
   useEffect(() => {
     async function fetchJsonData(modelFileName) {
       //   console.log(modelFileName);
@@ -34,10 +34,20 @@ const ViolinPlot = ({ modelFileName, directionColors }) => {
 
       const groupedByDirection = jsonData.reduce((acc, obj) => {
         const direction = obj.condition.direction;
+        if(isSelected){
+          if(selectedObserverIds[direction].includes(obj["observer id"])){
+            if (!acc[direction]) {
+              acc[direction] = [];
+            }
+            acc[direction].push(obj);
+          }
+        }
+        else{
         if (!acc[direction]) {
           acc[direction] = [];
         }
         acc[direction].push(obj);
+      }
         return acc;
       }, {});
 
@@ -66,7 +76,9 @@ const ViolinPlot = ({ modelFileName, directionColors }) => {
 
     // Define an async function inside useEffect
     const fetchData = async () => {
+      
       const jsonData = await fetchJsonData(modelFileName);
+      
       if (jsonData) {
         // console.log(jsonData);
 
@@ -121,7 +133,7 @@ const ViolinPlot = ({ modelFileName, directionColors }) => {
     };
 
     fetchData();
-  }, [modelFileName, directionColors]);
+  }, [modelFileName, directionColors, isSelected, selectedObserverIds]);
 
   return <div id="violinPlot"></div>;
 };
