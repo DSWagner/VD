@@ -6,17 +6,6 @@ const ModelSelector = ({ onFileSelected }) => {
   const [files, setFiles] = useState([]);
 
   useEffect(() => {
-    // Fetch the file list from the public directory
-    // fetch(`${process.env.PUBLIC_URL}/fileList.json`)
-    //   .then((response) => {
-    //     // Check if the response is ok (status in the range 200-299)
-    //     if (!response.ok) {
-    //       throw new Error("Network response was not ok");
-    //     }
-    //     return response.json();
-    //   })
-    //   .then((data) => setFiles(data))
-    //   .catch((error) => console.error("Error fetching file list:", error));
     VisualRepresentation.getModels().then((data) => setFiles(data))
   }, []); // The empty array ensures this effect runs only once after the initial render
 
