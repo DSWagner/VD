@@ -200,7 +200,13 @@ const ParametersTab = ({
             checked={dynaVizFlags[index]}
             onChange={(e) => handleDynaVizCheckbox(e.target.checked, index)}
           />
-          <button onClick={() => handleObserverPosition(index)}>Pozícia</button>
+          <button
+            onClick={() => handleObserverPosition(index)}
+            style={{ marginLeft: "10px" }}
+          >
+            Pozícia
+          </button>
+          <button style={{ marginLeft: "10px" }}>Rozšírený pohľad</button>
         </div>
       ))}
     </div>

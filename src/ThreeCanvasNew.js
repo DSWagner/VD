@@ -10,6 +10,8 @@ const ThreeCanvasNew = ({
   statVizFlags,
   dynaVizFlags,
   directionColors,
+  paramFlag,
+  sliderValue,
 }) => {
   const sceneRef = useRef(new THREE.Scene());
   const cameraRef = useRef(new THREE.PerspectiveCamera(60, 1, 0.1, 10000));
@@ -22,6 +24,12 @@ const ThreeCanvasNew = ({
   const prevDynaVizFlagsRef = useRef();
 
   useEffect(() => {
+    const renderer = rendererRef.current;
+    const newSize = (window.innerWidth * paramFlag) / 12;
+    renderer.setSize(newSize, newSize);
+  }, [paramFlag]); // Depend on paramFlag to re-trigger this effect
+
+  useEffect(() => {
     if (!modelFileName) return; // Don't proceed if modelFileName is not provided
     const modelFilePath = `/Dataset/3d_models/${modelFileName}`;
 
@@ -31,8 +39,8 @@ const ThreeCanvasNew = ({
     const renderer = rendererRef.current;
     // renderer.setSize(500, 500);
     renderer.setSize(
-      (window.innerWidth * 5) / 12,
-      (window.innerWidth * 5) / 12
+      (window.innerWidth * paramFlag) / 12,
+      (window.innerWidth * paramFlag) / 12
     );
     renderer.setClearColor(0x19191e, 1);
     let controls = controlsRef.current;
@@ -98,18 +106,17 @@ const ThreeCanvasNew = ({
     const scene = sceneRef.current;
 
     observerIds.forEach((observerIdGroup, index) => {
+      // Create a shallow copy of scene.children to safely iterate over
+      const childrenCopy = scene.children.slice();
+
+      childrenCopy.forEach((child) => {
+        // Assuming statVizFlags is an array with the same length as the number of fixation elements
+        if (child.name === `stat-fixation-${index}`) {
+          scene.remove(child); // Remove the child from the scene
+        }
+      });
       if (observerIdGroup) {
         observerIdGroup.forEach((observerId) => {
-          // Create a shallow copy of scene.children to safely iterate over
-          const childrenCopy = scene.children.slice();
-
-          childrenCopy.forEach((child) => {
-            // Assuming statVizFlags is an array with the same length as the number of fixation elements
-            if (child.name === `stat-fixation-${index}`) {
-              scene.remove(child); // Remove the child from the scene
-            }
-          });
-
           // Calculate the rotation angle in radians
           const degrees = (index - 3) * 15;
           const radians = degrees * (Math.PI / 180);
@@ -542,6 +549,53 @@ const ThreeCanvasNew = ({
 
     console.log(direction);
   }, [dynaVizFlags]);
+
+  useEffect(() => {
+    const updateVisibilityBasedOnModelPosition = () => {
+      const scene = sceneRef.current;
+      const maxDistance = 400; // Maximum distance from the origin point to consider
+      // Find the model object
+      const modelObject = scene.children.find(
+        (child) => child.name === "model"
+      );
+      if (!modelObject) {
+        console.error("Model object not found");
+        return;
+      }
+      const modelPosition = modelObject.position;
+
+      scene.children.forEach((child) => {
+        if (child.name.includes("line")) {
+          // Assuming the line is a THREE.Line object with a geometry attribute
+          const vertices = child.geometry.attributes.position.array;
+          let avgX = 0,
+            avgY = 0,
+            avgZ = 0;
+          for (let i = 0; i < vertices.length; i += 3) {
+            avgX += vertices[i];
+            avgY += vertices[i + 1];
+            avgZ += vertices[i + 2];
+          }
+          const numVertices = vertices.length / 3;
+          avgX /= numVertices;
+          avgY /= numVertices;
+          avgZ /= numVertices;
+
+          // Create a vector for the average position
+          const avgPosition = new THREE.Vector3(avgX, avgY, avgZ);
+          // Calculate the distance from the model's position to this average position
+          const distanceFromModel = avgPosition.distanceTo(modelPosition);
+          // Set visibility based on the calculated distance and sliderValue
+          child.visible = distanceFromModel <= sliderValue;
+        } else if (child.name.includes("dyna-fixation")) {
+          const distanceFromModel = child.position.distanceTo(modelPosition);
+          child.visible = distanceFromModel <= sliderValue;
+        }
+      });
+    };
+
+    updateVisibilityBasedOnModelPosition();
+  }, [sliderValue]);
 
   return (
     <div

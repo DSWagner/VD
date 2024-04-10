@@ -87,8 +87,14 @@ const StatTable = ({
             // console.log(tableData);
             tmpTableData = [...tmpTableData, row];
             tmpTableData.sort((a, b) => {
-              // Assuming direction is a number. If it's a string, you might need to parse it as a number first.
-              return parseFloat(a[3]) - parseFloat(b[3]);
+              // First, compare the direction (index 3)
+              const directionComparison = parseFloat(a[3]) - parseFloat(b[3]);
+              if (directionComparison !== 0) {
+                return directionComparison;
+              }
+              // If directions are equal, compare the material (index 2)
+              // Assuming material is a string, use localeCompare for string comparison
+              return a[2].localeCompare(b[2]);
             });
             console.log(tmpTableData);
             setTableData(tmpTableData);

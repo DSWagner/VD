@@ -15,12 +15,9 @@ function App() {
   VisualRepresentation.initialize();
 
   const [selectedFile, setSelectedFile] = useState("");
-  const [selectedObserverId, setSelectedObserverId] = useState("");
   const [selectedObserverIds, setSelectedObserverIds] = useState(
     Array(7).fill("")
   );
-  const [timeViz, setTimeViz] = useState(false);
-  const [obsPos, setObsPos] = useState(false);
   const [tableData, setTableData] = useState([
     [
       "ID poz.",
@@ -35,8 +32,8 @@ function App() {
   ]);
   const [cameraPos, setCameraPos] = useState();
   const [isExpandedTable, setIsExpandedTable] = useState(false);
-  const [isExpandedViolin, setIsExpandedViolin] = useState(false);
-  const [isExpandedPolar, setIsExpandedPolar] = useState(false);
+  const [isExpandedStatSel, setIsExpandedStatSel] = useState(false);
+  const [isExpandedStatAll, setIsExpandedStatAll] = useState(false);
   const [statVizFlags, setStatVizFlags] = useState(Array(7).fill(false));
   const [dynaVizFlags, setDynaVizFlags] = useState(Array(7).fill(false));
   const initialDirectionColors = colors.directions.reduce(
@@ -49,6 +46,8 @@ function App() {
   const [directionColors, setDirectionColors] = useState(
     initialDirectionColors
   ); // Initialize state for observer colors
+  const [paramFlag, setParamFlag] = useState(6);
+  const [sliderValue, setSliderValue] = useState(50);
 
   const handleFileSelected = (file) => {
     setSelectedFile(file);
@@ -57,39 +56,48 @@ function App() {
     setStatVizFlags(Array(7).fill(false));
     setDynaVizFlags(Array(7).fill(false));
     setCameraPos();
-    setSelectedObserverId(""); // Reset observer ID when a new file is selected
     // setDirectionColors({});
-  };
-
-  // const handleObserverSelected = (observerId) => {
-  //   setSelectedObserverId(observerId);
-  // };
-
-  // Handler for the visualization button
-  const handleVisualizationClick = () => {
-    setTimeViz(true);
-  };
-
-  const handleObsPosClick = () => {
-    setObsPos(true);
   };
 
   const handleExpandTable = () => {
     setIsExpandedTable(!isExpandedTable);
   };
 
-  const handleExpandViolin = () => {
-    setIsExpandedViolin(!isExpandedViolin);
+  const handleExpandStatSel = () => {
+    setIsExpandedStatSel(!isExpandedStatSel);
   };
 
-  const handleExpandPolar = () => {
-    setIsExpandedPolar(!isExpandedPolar);
+  const handleExpandStatAll = () => {
+    setIsExpandedStatAll(!isExpandedStatAll);
+  };
+
+  const handleParameters = () => {
+    console.log("Parameters button clicked, ", paramFlag);
+    // Add any logic here that you want to execute when the button is clicked
+
+    if (paramFlag === 6) {
+      setParamFlag(5);
+    } else {
+      setParamFlag(6);
+    }
   };
 
   return (
     <div className="App container-fluid" style={{ margin: 0 }}>
-      <div className="row header">
+      {/* <div className="row header">
         <h1>Vizualizácia 3D eye-tracking dát</h1>
+      </div> */}
+      <div className="row">
+        <div>Zvoľte si 3D objekt na vizualizáciu</div>
+        <div>
+          <ModelSelector onFileSelected={handleFileSelected} />
+          {selectedFile && (
+            <button style={{ marginLeft: "10px" }} onClick={handleParameters}>
+              Parametre
+            </button>
+          )}
+          {/* Add this line */}
+        </div>
       </div>
 
       <div className="row">
@@ -97,7 +105,12 @@ function App() {
           {selectedFile && (
             <>
               <div>
-                <button onClick={handleExpandTable}>Tabulka</button>
+                <button
+                  onClick={handleExpandTable}
+                  style={{ marginTop: "10px" }}
+                >
+                  Tabulka
+                </button>
                 {isExpandedTable && (
                   <StatTable
                     modelFileName={selectedFile}
@@ -108,28 +121,49 @@ function App() {
                 )}
               </div>
               <div>
-                <button onClick={handleExpandViolin}>Huslový graf</button>
-                {isExpandedViolin && (
-                  <ViolinPlot
-                    modelFileName={selectedFile}
-                    directionColors={directionColors}
-                  />
+                <button
+                  onClick={handleExpandStatSel}
+                  style={{ marginTop: "10px" }}
+                >
+                  Vizualizácia zvolenych pozorovateľov
+                </button>
+                {isExpandedStatSel && (
+                  <div>
+                    <ViolinPlot
+                      modelFileName={selectedFile}
+                      directionColors={directionColors}
+                    />
+                    <PolarHistogram
+                      modelFileName={selectedFile}
+                      directionColors={directionColors}
+                    />
+                  </div>
                 )}
               </div>
               <div>
-                <button onClick={handleExpandPolar}>Polárny histogram</button>
-                {isExpandedPolar && (
-                  <PolarHistogram
-                    modelFileName={selectedFile}
-                    directionColors={directionColors}
-                  />
+                <button
+                  onClick={handleExpandStatAll}
+                  style={{ marginTop: "10px" }}
+                >
+                  Vizualizácia všetkých pozorovateľov
+                </button>
+                {isExpandedStatAll && (
+                  <div>
+                    <ViolinPlot
+                      modelFileName={selectedFile}
+                      directionColors={directionColors}
+                    />
+                    <PolarHistogram
+                      modelFileName={selectedFile}
+                      directionColors={directionColors}
+                    />
+                  </div>
                 )}
               </div>
             </>
           )}
         </div>
-
-        <div className="col-5">
+        <div className={`col-${paramFlag.toString()}`}>
           {selectedFile && (
             <>
               <ThreeCanvasNew
@@ -139,52 +173,64 @@ function App() {
                 statVizFlags={statVizFlags}
                 dynaVizFlags={dynaVizFlags}
                 directionColors={directionColors}
+                paramFlag={paramFlag}
+                sliderValue={sliderValue}
               />
             </>
           )}
         </div>
-
-        <div className="col-3">
-          <div className="row">
-            <div>Zvoľte si 3D objekt na vizualizáciu</div>
-            <div>
-              <ModelSelector onFileSelected={handleFileSelected} />
+        {paramFlag - 6 != 0 && (
+          <div className="col-3">
+            <div className="row">
+              {selectedFile && ( // Only show the observer selector if a file is selected
+                <>
+                  <div>Zvoľte si ID pozorovateľov</div>
+                  <ParametersTab
+                    modelFileName={selectedFile}
+                    observerIds={selectedObserverIds}
+                    setObserverIds={setSelectedObserverIds}
+                    setCameraPos={setCameraPos}
+                    statVizFlags={statVizFlags}
+                    setStatVizFlags={setStatVizFlags}
+                    dynaVizFlags={dynaVizFlags}
+                    setDynaVizFlags={setDynaVizFlags}
+                    directionColors={directionColors}
+                    setDirectionColors={setDirectionColors}
+                  />
+                  {/* Slider element added below */}
+                  <div
+                    className="slider-container"
+                    style={{ marginTop: "20px" }}
+                  >
+                    <input
+                      type="range"
+                      min="100"
+                      max="400"
+                      value={sliderValue}
+                      onChange={(e) => setSliderValue(e.target.value)}
+                      className="slider"
+                      style={{ width: "100%" }}
+                    />
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginTop: "10px",
+                      }}
+                    >
+                      <span>0s</span>
+                      <span>1s</span>
+                      <span>2s</span>
+                      <span>3s</span>
+                      <span>4s</span>
+                      <span>5s</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
-          <div className="row">
-            {selectedFile && ( // Only show the observer selector if a file is selected
-              <>
-                <div>Zvoľte si ID pozorovateľov</div>
-                <ParametersTab
-                  modelFileName={selectedFile}
-                  observerIds={selectedObserverIds}
-                  setObserverIds={setSelectedObserverIds}
-                  setCameraPos={setCameraPos}
-                  statVizFlags={statVizFlags}
-                  setStatVizFlags={setStatVizFlags}
-                  dynaVizFlags={dynaVizFlags}
-                  setDynaVizFlags={setDynaVizFlags}
-                  directionColors={directionColors}
-                  setDirectionColors={setDirectionColors}
-                />
-              </>
-            )}
-            {selectedObserverId && ( // Only show the observer ID if it is selected
-              <>
-                {/* <div>Zvolené ID pozorovateľa: {selectedObserverId}</div> */}
-                {/* Conditional button rendering */}
-                <div>
-                  <button onClick={handleVisualizationClick}>
-                    Vizualizácia v čase
-                  </button>
-                </div>
-                <div>
-                  <button onClick={handleObsPosClick}>Pozorovateľ</button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

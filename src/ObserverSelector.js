@@ -71,6 +71,11 @@ const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
       VisualRepresentation.getObservers(index).then((ids) => setObserverIds(ids));
   }, [modelFileName, index]);
 
+  useEffect(() => {
+    // Reset selectedObserverIds when modelFileName changes
+    setSelectedObserverIds([]);
+  }, [modelFileName]); // Add modelFileName as a dependency
+
   const handleChange = (selectedOptions) => {
     setSelectedObserverIds(selectedOptions);
     console.log("SELECTED: ", selectedOptions);
@@ -100,6 +105,10 @@ const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
             ...provided,
             color: "black", // This sets the selected item's font color to black
           }),
+          // control: (provided) => ({
+          //   ...provided,
+          //   width: "50%", // Set the width of the Select component to 50%
+          // }),
           // Add more custom styles if needed
         }}
       />
