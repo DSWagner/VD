@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import "./App.css";
 import ModelSelector from "./ModelSelector";
+import GroupedBarChart from "./GroupedBarChart";
 import ThreeCanvas from "./ThreeCanvas";
 import ThreeCanvasNew from "./ThreeCanvasNew";
 import ViolinPlot from "./ViolinPlot";
@@ -143,7 +144,14 @@ function App() {
                     setTableData={setTableData}
                   />
                 )}
+                {isExpandedTable && (
+                  <GroupedBarChart
+                  tableData = {tableData}
+                  directionColors = {directionColors}
+                  />
+                )}
               </div>
+
               <div>
                 <button
                   onClick={handleExpandStatViolin}
