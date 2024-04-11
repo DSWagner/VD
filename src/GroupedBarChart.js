@@ -47,10 +47,11 @@ const GroupedBarChart = ({tableData, directionColors}) => {
             return {
                 labels: dataLabels,
                 datasets: [
-                    { label: 'Min Fix', data: minFixAvg, backgroundColor: 'rgba(247,37,133, 0.5)' },
+                    { label: 'Min Fix', data: minFixAvg, backgroundColor: 'rgba(76,201,240, 0.5)' },
                     { label: 'Avg Fix', data: avgFixAvg, backgroundColor: 'rgba(133,235,217, 0.5)' },
-                    { label: 'Max Fix', data: maxFixAvg, backgroundColor: 'rgba(76,201,240, 0.5)' }
+                    { label: 'Max Fix', data: maxFixAvg, backgroundColor: 'rgba(247,37,133, 0.5)' }
                 ]
+                
             };
         }
         const plotData = processData();
