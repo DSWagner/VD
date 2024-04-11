@@ -1,55 +1,10 @@
-// import React, { useState, useEffect } from "react";
-
-// const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
-//   const [observerIds, setObserverIds] = useState([]);
-
-//   useEffect(() => {
-//     const jsonFilename = modelFileName.replace(".stl", ".json");
-//     fetch(`${process.env.PUBLIC_URL}/Dataset/gazePerObject/${jsonFilename}`)
-//       .then((response) => response.json())
-//       .then((data) => {
-//         // Filter items where ["condition"]["direction"] matches the index
-//         const filteredData = data.filter(
-//           (item) => item["condition"]["direction"] === index
-//         );
-//         // Extract "observer id" from the filtered items
-//         const ids = filteredData.map((item) => item["observer id"]);
-//         setObserverIds(ids);
-//       })
-//       .catch((error) => console.error("Failed to load observer IDs:", error));
-//   }, [modelFileName, index]); // Include index in the dependency array
-
-//   return (
-//     <>
-//       <label htmlFor={`observerSelector${index}`}>
-//         Smer: {(index - 3) * 15}° :
-//       </label>
-//       <select
-//         onChange={(e) => onObserverSelected(e.target.value)}
-//         defaultValue=""
-//         key={modelFileName} // Add this line
-//       >
-//         <option value="" disabled>
-//           ID pozorovateľa
-//         </option>
-//         {observerIds.map((id) => (
-//           <option key={id} value={id}>
-//             {id}
-//           </option>
-//         ))}
-//       </select>
-//     </>
-//   );
-// };
-
-// export default ObserverSelector;
-
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
 
 const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
   const [observerIds, setObserverIds] = useState([]);
   const [selectedObserverIds, setSelectedObserverIds] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
 
   useEffect(() => {
     const jsonFilename = modelFileName.replace(".stl", ".json");
@@ -66,19 +21,35 @@ const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
         setObserverIds(ids);
       })
       .catch((error) => console.error("Failed to load observer IDs:", error));
-    // Reset selectedObserverIds when modelFileName changes
-    setSelectedObserverIds([]);
   }, [modelFileName, index]);
 
   useEffect(() => {
-    // Reset selectedObserverIds when modelFileName changes
-    setSelectedObserverIds([]);
-  }, [modelFileName]); // Add modelFileName as a dependency
+    if (selectAll) {
+      setSelectedObserverIds(observerIds);
+    } else {
+      setSelectedObserverIds([]);
+    }
+  }, [selectAll]); // This effect runs when modelFileName changes
+
+  useEffect(() => {
+    setObserverIds([]); // Clear all observer IDs
+    setSelectedObserverIds([]); // Clear selected observer IDs
+    setSelectAll(false); // Uncheck the "Select All" checkbox
+  }, [modelFileName]); // This effect runs when modelFileName changes
+
+  const handleCheckboxChange = (event) => {
+    setSelectAll(event.target.checked);
+    if (event.target.checked) {
+      setSelectedObserverIds(observerIds);
+      onObserverSelected(observerIds.map((option) => option.value));
+    } else {
+      setSelectedObserverIds([]);
+      onObserverSelected([]);
+    }
+  };
 
   const handleChange = (selectedOptions) => {
     setSelectedObserverIds(selectedOptions);
-    console.log("SELECTED: ", selectedOptions);
-    // Assuming onObserverSelected can now handle an array of objects
     onObserverSelected(selectedOptions.map((option) => option.value));
   };
 
@@ -98,19 +69,22 @@ const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
         styles={{
           option: (provided) => ({
             ...provided,
-            color: "black", // This sets the dropdown options' font color to black
+            color: "black",
           }),
           singleValue: (provided) => ({
             ...provided,
-            color: "black", // This sets the selected item's font color to black
+            color: "black",
           }),
-          // control: (provided) => ({
-          //   ...provided,
-          //   width: "50%", // Set the width of the Select component to 50%
-          // }),
-          // Add more custom styles if needed
         }}
       />
+      <label>
+        Select All
+        <input
+          type="checkbox"
+          checked={selectAll}
+          onChange={handleCheckboxChange}
+        />
+      </label>
     </>
   );
 };

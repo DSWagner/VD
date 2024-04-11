@@ -122,10 +122,8 @@ const ParametersTab = ({
   }, [modelFileName]);
 
   const handleObserversSelected = (selectedObservers, index) => {
-    console.log("SO: ", selectedObservers);
     // Assuming selectedObservers is an array of objects like [{ id: 'observer1', label: 'Observer 1' }, ...]
     const newObserverIds = [...observerIds];
-    console.log("NO1: ", newObserverIds);
     console.log(index);
 
     // Here, you might want to store just the IDs or the entire object, depending on your use case
@@ -136,7 +134,6 @@ const ParametersTab = ({
     // newObserverIds[index] = selectedObservers;
 
     setObserverIds(newObserverIds);
-    console.log("NO2: ", newObserverIds);
   };
 
   const handleStatVizCheckbox = (flag, index) => {

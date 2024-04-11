@@ -1,5 +1,5 @@
 // App.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import ModelSelector from "./ModelSelector";
 import ThreeCanvas from "./ThreeCanvas";
@@ -9,11 +9,12 @@ import PolarHistogram from "./PolarHistogram";
 import StatTable from "./StatTable";
 import ParametersTab from "./ParametersTab";
 import colors from "./colors.json";
+import ReactSlider from "react-slider";
 
 function App() {
   const [selectedFile, setSelectedFile] = useState("");
   const [selectedObserverIds, setSelectedObserverIds] = useState(
-    Array(7).fill("")
+    Array(7).fill([])
   );
   const [tableData, setTableData] = useState([
     [
@@ -44,11 +45,24 @@ function App() {
     initialDirectionColors
   ); // Initialize state for observer colors
   const [paramFlag, setParamFlag] = useState(6);
-  const [sliderValue, setSliderValue] = useState(50);
+  const [sliderValue, setSliderValue] = useState(450);
+
+  const [rangeValues, setRangeValues] = useState({
+    min: 100,
+    max: 450,
+  });
+  const [middleValue, setMiddleValue] = useState(
+    (rangeValues.min + rangeValues.max) / 2
+  );
+
+  useEffect(() => {
+    // Update the middle value whenever min or max changes
+    setMiddleValue((rangeValues.min + rangeValues.max) / 2);
+  }, [rangeValues.min, rangeValues.max]);
 
   const handleFileSelected = (file) => {
     setSelectedFile(file);
-    setSelectedObserverIds(Array(7).fill(""));
+    setSelectedObserverIds(Array(7).fill([]));
     setTableData([tableData[0]]);
     setStatVizFlags(Array(7).fill(false));
     setDynaVizFlags(Array(7).fill(false));
@@ -76,6 +90,25 @@ function App() {
       setParamFlag(5);
     } else {
       setParamFlag(6);
+    }
+  };
+
+  const handleRangeChange = (value, type) => {
+    const newValue = Number(value);
+    if (type === "middle") {
+      const oldMiddleValue = middleValue;
+      const difference = newValue - oldMiddleValue;
+      setRangeValues((prev) => ({
+        min: Math.max(0, prev.min + difference), // Ensure min doesn't go below 0
+        max: prev.max + difference,
+      }));
+      setMiddleValue(newValue); // Update the middle value state
+    } else if (type === "min" && newValue > rangeValues.max) {
+      setRangeValues((prev) => ({ ...prev, min: prev.max }));
+    } else if (type === "max" && newValue < rangeValues.min) {
+      setRangeValues((prev) => ({ ...prev, max: prev.min }));
+    } else {
+      setRangeValues((prev) => ({ ...prev, [type]: newValue }));
     }
   };
 
@@ -172,6 +205,7 @@ function App() {
                 directionColors={directionColors}
                 paramFlag={paramFlag}
                 sliderValue={sliderValue}
+                rangeValues={rangeValues}
               />
             </>
           )}
@@ -195,34 +229,76 @@ function App() {
                     setDirectionColors={setDirectionColors}
                   />
                   {/* Slider element added below */}
-                  <div
-                    className="slider-container"
-                    style={{ marginTop: "20px" }}
-                  >
-                    <input
+                  {dynaVizFlags.some((flag) => flag) && (
+                    <div
+                      className="slider-container"
+                      style={{ marginTop: "20px" }}
+                    >
+                      {/* <input
                       type="range"
                       min="100"
-                      max="400"
+                      max="450"
                       value={sliderValue}
                       onChange={(e) => setSliderValue(e.target.value)}
                       className="slider"
                       style={{ width: "100%" }}
-                    />
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        marginTop: "10px",
-                      }}
-                    >
-                      <span>0s</span>
-                      <span>1s</span>
-                      <span>2s</span>
-                      <span>3s</span>
-                      <span>4s</span>
-                      <span>5s</span>
+                    /> */}
+                      <input
+                        type="range"
+                        min="100"
+                        max="450"
+                        value={rangeValues.min}
+                        onChange={(e) =>
+                          handleRangeChange(e.target.value, "min")
+                        }
+                        className="slider slider-blue"
+                        style={{
+                          width: "100%",
+                          backgroundColor: "blue",
+                        }}
+                      />
+                      <input
+                        type="range"
+                        min="100"
+                        max="450"
+                        value={middleValue}
+                        onChange={(e) =>
+                          handleRangeChange(e.target.value, "middle")
+                        }
+                        className="slider"
+                        style={{ width: "100%", backgroundColor: "grey" }}
+                      />
+                      <input
+                        type="range"
+                        min="100"
+                        max="450"
+                        value={rangeValues.max}
+                        onChange={(e) =>
+                          handleRangeChange(e.target.value, "max")
+                        }
+                        className="slider"
+                        style={{
+                          width: "100%",
+                          backgroundColor: "red",
+                        }}
+                      />
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginTop: "10px",
+                        }}
+                      >
+                        <span>0s</span>
+                        <span>1s</span>
+                        <span>2s</span>
+                        <span>3s</span>
+                        <span>4s</span>
+                        <span>5s</span>
+                        <span>6s</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </>
               )}
             </div>
