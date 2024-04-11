@@ -1,14 +1,14 @@
 import React, { useEffect, useRef } from 'react';
-import { Chart, BarElement, CategoryScale, LinearScale, BarController } from 'chart.js';
-import { element } from 'three/examples/jsm/nodes/Nodes.js';
+import Plot from "plotly.js-dist-min";
 
-const GroupedBarChart = (tableData, directionColors) => {
-    const canvasRef = useRef(null);
-    const chartInstanceRef = useRef(null);
-    let plotData = "";
+const GroupedBarChart = ({tableData, directionColors}) => {
     useEffect(() => {
+        const labels = ['-45', '-30', '-15', '0', '15', '30', '45'];
+        const labeledColors = labels.map((label, index) => [label, directionColors[index]]);
+        console.log(labeledColors);
         const processData = () => {
-            const data = tableData.tableData.slice(1);
+            console.log(directionColors[0]);
+            const data = tableData.slice(1);
             const dataLabels= [];
             const minFix = [];
             const avgFix = [];
@@ -44,39 +44,63 @@ const GroupedBarChart = (tableData, directionColors) => {
             avgFixAvg = calculateAverage(avgFix);
             maxFixAvg = calculateAverage(maxFix);
 
-            plotData = {
+            return {
                 labels: dataLabels,
-                datasets: [{
-                    label: 'MinFix',
-                    data: minFixAvg,
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)'
-                }, {
-                    label: 'AvgFix',
-                    data: avgFixAvg,
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)'
-                }, {
-                  label: 'MixFix',
-                  data: maxFixAvg,
-                  backgroundColor: 'rgba(54, 235, 162, 0.2)'
-              }]
-            }
+                datasets: [
+                    { label: 'Min Fix', data: minFixAvg, backgroundColor: 'rgba(247,37,133, 0.5)' },
+                    { label: 'Avg Fix', data: avgFixAvg, backgroundColor: 'rgba(133,235,217, 0.5)' },
+                    { label: 'Max Fix', data: maxFixAvg, backgroundColor: 'rgba(76,201,240, 0.5)' }
+                ]
+            };
         }
-        processData();
-        Chart.register(BarElement, CategoryScale, LinearScale, BarController);
-        // Initialize chart
-        chartInstanceRef.current = new Chart(canvasRef.current, {
+        const plotData = processData();
+      
+        const layout = {
+            title: "Table Visualization",
+            barmode: 'group',
+            plot_bgcolor: '#19191e',
+            paper_bgcolor: "#19191e",
+            font: {
+                color: "#e0e0e0",
+              },
+              xaxis: {
+                tickfont: {
+                    //color: directionColors, // Replace 'desiredColor' with the color you want for the X-axis labels
+                    size: 16 // Optional: Adjust the font size as needed
+                }
+            },
+        }
+
+        Plot.newPlot('tableVizualization', plotData.datasets.map(dataset => ({
+            x: plotData.labels,
+            y: dataset.data,
+            backgroundColor: 'black',
             type: 'bar',
-            data: plotData, // specify your data
-            options: {} // specify your options// specify your options
+            name: dataset.label,
+            font: {
+                size: 16,
+                color: "#e0e0e0",
+              },
+            marker: { 
+                color: dataset.backgroundColor,
+                font: {
+                    size: 16,
+                    color: "#e0e0e0",
+                  }, }
+        })), layout);
+
+        const tickLabels = document.querySelectorAll('.xtick text');
+        tickLabels.forEach((label) => {
+            const labelWithoutDegree = label.textContent.replace('°', ''); // Remove degree sign
+            const foundPair = labeledColors.find(pair => pair[0] === labelWithoutDegree);
+            if (foundPair) {
+                label.style.fill = foundPair[1]; // Set the color of the tick label using the color from the pair
+            }
         });
 
-        // Cleanup function to destroy chart
-        return () => {
-            chartInstanceRef.current.destroy();
-        };
     }, [tableData, directionColors]); // Empty dependency array ensures this effect runs only once
 
-    return <canvas ref={canvasRef}></canvas>;
+    return <div id="tableVizualization"></div>;
 };
 
 export default GroupedBarChart;
