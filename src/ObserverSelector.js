@@ -78,7 +78,7 @@ const ObserverSelector = ({ modelFileName, onObserverSelected, index }) => {
         }}
       />
       <label>
-        Select All
+        Zvoliť všetkých
         <input
           type="checkbox"
           checked={selectAll}

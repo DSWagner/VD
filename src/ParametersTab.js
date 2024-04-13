@@ -113,6 +113,9 @@ const ParametersTab = ({
   setDynaVizFlags,
   directionColors,
   setDirectionColors,
+  advancedViewFlags,
+  setAdvancedViewFlags,
+  setRangeValues,
 }) => {
   useEffect(() => {
     if (!modelFileName) return;
@@ -169,16 +172,38 @@ const ParametersTab = ({
     setDirectionColors(newColors);
   };
 
+  const handleAdvancedView = (index) => {
+    const updatedFlags = advancedViewFlags.map((flag, idx) =>
+      idx === index ? !flag : flag
+    );
+    console.log("UPDATED FLAGS: ", updatedFlags);
+    setAdvancedViewFlags(updatedFlags);
+    setRangeValues({
+      min: 100,
+      max: 450,
+    });
+  };
+
   return (
     <div>
       {observerIds.map((observerId, index) => (
-        <div>
+        <div
+          style={{
+            display:
+              advancedViewFlags.every((flag) => !flag) ||
+              advancedViewFlags[index]
+                ? "block"
+                : "none",
+          }}
+        >
           <ObserverSelector
             onObserverSelected={(_observerIds) =>
               handleObserversSelected(_observerIds, index)
             }
             modelFileName={modelFileName}
             index={index}
+            globalObserverIds={observerIds}
+            advancedViewFlags={advancedViewFlags}
           />
           <input
             type="color"
@@ -203,7 +228,12 @@ const ParametersTab = ({
           >
             Pozícia
           </button>
-          <button style={{ marginLeft: "10px" }}>Rozšírený pohľad</button>
+          <button
+            onClick={() => handleAdvancedView(index)}
+            style={{ marginLeft: "10px" }}
+          >
+            Rozšírený pohľad
+          </button>
         </div>
       ))}
     </div>

@@ -9,7 +9,6 @@ import PolarHistogram from "./PolarHistogram";
 import StatTable from "./StatTable";
 import ParametersTab from "./ParametersTab";
 import colors from "./colors.json";
-import ReactSlider from "react-slider";
 
 function App() {
   const [selectedFile, setSelectedFile] = useState("");
@@ -45,7 +44,6 @@ function App() {
     initialDirectionColors
   ); // Initialize state for observer colors
   const [paramFlag, setParamFlag] = useState(6);
-  const [sliderValue, setSliderValue] = useState(450);
 
   const [rangeValues, setRangeValues] = useState({
     min: 100,
@@ -53,6 +51,9 @@ function App() {
   });
   const [middleValue, setMiddleValue] = useState(
     (rangeValues.min + rangeValues.max) / 2
+  );
+  const [advancedViewFlags, setAdvancedViewFlags] = useState(
+    Array(7).fill(false)
   );
 
   useEffect(() => {
@@ -67,6 +68,13 @@ function App() {
     setStatVizFlags(Array(7).fill(false));
     setDynaVizFlags(Array(7).fill(false));
     setCameraPos();
+    setParamFlag(6);
+    setRangeValues({
+      min: 100,
+      max: 450,
+    });
+    setMiddleValue((rangeValues.min + rangeValues.max) / 2);
+    setAdvancedViewFlags(Array(7).fill(false));
     // setDirectionColors({});
   };
 
@@ -98,11 +106,23 @@ function App() {
     if (type === "middle") {
       const oldMiddleValue = middleValue;
       const difference = newValue - oldMiddleValue;
+
+      // Calculate potential new min and max values
+      const newMin = rangeValues.min + difference;
+      const newMax = rangeValues.max + difference;
+
+      // Check if the new min or max would be out of the slider's range
+      if (newMin < 100 || newMax > 450) {
+        // If out of range, do not update
+        return;
+      }
+
+      // Update range values and middle value
       setRangeValues((prev) => ({
-        min: Math.max(0, prev.min + difference), // Ensure min doesn't go below 0
-        max: prev.max + difference,
+        min: newMin,
+        max: newMax,
       }));
-      setMiddleValue(newValue); // Update the middle value state
+      setMiddleValue(newValue);
     } else if (type === "min" && newValue > rangeValues.max) {
       setRangeValues((prev) => ({ ...prev, min: prev.max }));
     } else if (type === "max" && newValue < rangeValues.min) {
@@ -204,8 +224,8 @@ function App() {
                 dynaVizFlags={dynaVizFlags}
                 directionColors={directionColors}
                 paramFlag={paramFlag}
-                sliderValue={sliderValue}
                 rangeValues={rangeValues}
+                advancedViewFlags={advancedViewFlags}
               />
             </>
           )}
@@ -227,6 +247,9 @@ function App() {
                     setDynaVizFlags={setDynaVizFlags}
                     directionColors={directionColors}
                     setDirectionColors={setDirectionColors}
+                    advancedViewFlags={advancedViewFlags}
+                    setAdvancedViewFlags={setAdvancedViewFlags}
+                    setRangeValues={setRangeValues}
                   />
                   {/* Slider element added below */}
                   {dynaVizFlags.some((flag) => flag) && (
@@ -234,15 +257,6 @@ function App() {
                       className="slider-container"
                       style={{ marginTop: "20px" }}
                     >
-                      {/* <input
-                      type="range"
-                      min="100"
-                      max="450"
-                      value={sliderValue}
-                      onChange={(e) => setSliderValue(e.target.value)}
-                      className="slider"
-                      style={{ width: "100%" }}
-                    /> */}
                       <input
                         type="range"
                         min="100"

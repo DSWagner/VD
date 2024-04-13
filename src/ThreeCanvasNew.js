@@ -11,8 +11,8 @@ const ThreeCanvasNew = ({
   dynaVizFlags,
   directionColors,
   paramFlag,
-  sliderValue,
   rangeValues,
+  advancedViewFlags,
 }) => {
   const sceneRef = useRef(new THREE.Scene());
   const cameraRef = useRef(new THREE.PerspectiveCamera(60, 1, 0.1, 10000));
@@ -273,9 +273,13 @@ const ThreeCanvasNew = ({
       // Construct the name to look for
       const targetName = `stat-fixation-${index}`;
 
+      const isAdvanced =
+        advancedViewFlags[index] ||
+        !advancedViewFlags.some((flag) => flag === true);
+
       // Find children with the matching name
       scene.children.forEach((child) => {
-        if (child.name === targetName) {
+        if (child.name === targetName && isAdvanced) {
           // Set visibility based on the corresponding statVizFlag
           child.visible = isVisible;
         }
@@ -316,9 +320,6 @@ const ThreeCanvasNew = ({
     const prevDynaVizFlags = prevDynaVizFlagsRef.current;
     let direction = -1;
 
-    console.log(prevDynaVizFlags);
-    console.log(dynaVizFlags);
-
     if (prevDynaVizFlags) {
       dynaVizFlags.forEach((flag, index) => {
         if (flag !== prevDynaVizFlags[index]) {
@@ -328,14 +329,12 @@ const ThreeCanvasNew = ({
       });
     }
 
-    console.log(direction);
     // Update the ref to the current state for the next render
     prevDynaVizFlagsRef.current = dynaVizFlags;
 
     if (direction == -1) return;
 
     if (!dynaVizFlags[direction]) {
-      console.log("VYMAZ");
       // Create a shallow copy of scene.children to safely iterate over
       const childrenCopy = scene.children.slice();
 
@@ -350,8 +349,6 @@ const ThreeCanvasNew = ({
       });
     } else {
       const observerIdGroup = observerIds[direction];
-      console.log("Observer ID: ", observerIdGroup);
-      console.log("FLAG: ", dynaVizFlags[direction]);
 
       if (observerIdGroup && observerIdGroup.length > 0) {
         const jsonFileName = modelFileName.replace(".stl", ".json");
@@ -421,7 +418,7 @@ const ThreeCanvasNew = ({
               const projectionScalar =
                 cylinder.position.dot(vectorFromModelToObserver) /
                 vectorFromModelToObserver.lengthSq();
-              console.log(projectionScalar);
+
               const projectionVector = vectorFromModelToObserver
                 .clone()
                 .multiplyScalar(projectionScalar);
@@ -564,7 +561,7 @@ const ThreeCanvasNew = ({
       }
     }
 
-    console.log(direction);
+    // console.log(direction);
   }, [dynaVizFlags]);
 
   useEffect(() => {
@@ -578,43 +575,84 @@ const ThreeCanvasNew = ({
         console.log("Model object not found");
         return;
       }
-      const modelPosition = modelObject.position;
 
-      scene.children.forEach((child) => {
+      // Ensure the geometry has a bounding box
+      if (!modelObject.geometry.boundingBox) {
+        modelObject.geometry.computeBoundingBox();
+      }
+
+      // Calculate the center of the bounding box
+      const modelCenterPosition = new THREE.Vector3();
+      modelObject.geometry.boundingBox.getCenter(modelCenterPosition);
+
+      // const modelPosition = modelObject.position;
+
+      // Create an array to hold children whose name includes "direction"
+      const directionChildren = scene.children.filter((child) =>
+        child.name.includes("direction")
+      );
+
+      // Create an object to store direction vectors with their corresponding index
+      const directionVectors = {};
+
+      directionChildren.forEach((directionChild) => {
+        const directionVector = new THREE.Vector3();
+        directionVector.subVectors(
+          directionChild.position,
+          modelCenterPosition
+        );
+        // Use the index from the name of the directionChild as the key
+        const splitName = directionChild.name.split("-");
+        const index = splitName[splitName.length - 1];
+        directionVectors[index] = directionVector;
+      });
+
+      // Filter scene children where child.name includes "line" or "dyna-fixation"
+      const filteredChildren = scene.children.filter(
+        (child) =>
+          child.name.includes("line") || child.name.includes("dyna-fixation")
+      );
+
+      // Iterate through the filtered children
+      filteredChildren.forEach((child) => {
+        const splitName = child.name.split("-");
+        const index = splitName[splitName.length - 1];
         if (
-          child.name.includes("line") ||
-          child.name.includes("dyna-fixation")
+          !advancedViewFlags.some((flag) => flag) ||
+          advancedViewFlags[index]
         ) {
-          // Assuming the line or dyna-fixation is a THREE object with a position or vertices
-          let distanceFromModel;
-          if (child.name.includes("line")) {
-            const vertices = child.geometry.attributes.position.array;
-            let avgX = 0,
-              avgY = 0,
-              avgZ = 0;
-            for (let i = 0; i < vertices.length; i += 3) {
-              avgX += vertices[i];
-              avgY += vertices[i + 1];
-              avgZ += vertices[i + 2];
+          if (directionVectors[index]) {
+            let childPosition = new THREE.Vector3();
+
+            if (child.type === "Line") {
+              const vertices = child.geometry.attributes.position.array;
+              let avgX = 0,
+                avgY = 0,
+                avgZ = 0;
+              for (let i = 0; i < vertices.length; i += 3) {
+                avgX += vertices[i];
+                avgY += vertices[i + 1];
+                avgZ += vertices[i + 2];
+              }
+              const numVertices = vertices.length / 3;
+              avgX /= numVertices;
+              avgY /= numVertices;
+              avgZ /= numVertices;
+              childPosition.set(avgX, avgY, avgZ);
+            } else {
+              childPosition.copy(child.position);
             }
-            const numVertices = vertices.length / 3;
-            avgX /= numVertices;
-            avgY /= numVertices;
-            avgZ /= numVertices;
 
-            // Create a vector for the average position
-            const avgPosition = new THREE.Vector3(avgX, avgY, avgZ);
-            // Calculate the distance from the model's position to this average position
-            distanceFromModel = avgPosition.distanceTo(modelPosition);
-          } else {
-            // Directly use the position for dyna-fixation
-            distanceFromModel = child.position.distanceTo(modelPosition);
+            const projectionScalar =
+              childPosition.dot(directionVectors[index]) /
+              directionVectors[index].lengthSq();
+            const projection = directionVectors[index]
+              .clone()
+              .multiplyScalar(projectionScalar);
+            const distance = modelCenterPosition.distanceTo(projection);
+            child.visible =
+              distance >= rangeValues.min && distance <= rangeValues.max;
           }
-
-          // Set visibility based on the calculated distance and rangeValues
-          child.visible =
-            distanceFromModel >= rangeValues.min &&
-            distanceFromModel <= rangeValues.max;
         }
       });
     };
@@ -622,51 +660,58 @@ const ThreeCanvasNew = ({
     updateVisibilityBasedOnModelPosition();
   }, [rangeValues]);
 
-  // useEffect(() => {
-  //   const updateVisibilityBasedOnModelPosition = () => {
-  //     const scene = sceneRef.current;
-  //     // Find the model object
-  //     const modelObject = scene.children.find(
-  //       (child) => child.name === "model"
-  //     );
-  //     if (!modelObject) {
-  //       console.log("Model object not found");
-  //       return;
-  //     }
-  //     const modelPosition = modelObject.position;
+  useEffect(() => {
+    const scene = sceneRef.current;
+    const isAdvanced = advancedViewFlags.some((flag) => flag === true);
 
-  //     scene.children.forEach((child) => {
-  //       if (child.name.includes("line")) {
-  //         // Assuming the line is a THREE.Line object with a geometry attribute
-  //         const vertices = child.geometry.attributes.position.array;
-  //         let avgX = 0,
-  //           avgY = 0,
-  //           avgZ = 0;
-  //         for (let i = 0; i < vertices.length; i += 3) {
-  //           avgX += vertices[i];
-  //           avgY += vertices[i + 1];
-  //           avgZ += vertices[i + 2];
-  //         }
-  //         const numVertices = vertices.length / 3;
-  //         avgX /= numVertices;
-  //         avgY /= numVertices;
-  //         avgZ /= numVertices;
+    // Iterate over all children in the scene
+    scene.children.forEach((child) => {
+      // Default visibility to false unless conditions are met
+      let isVisible = false;
 
-  //         // Create a vector for the average position
-  //         const avgPosition = new THREE.Vector3(avgX, avgY, avgZ);
-  //         // Calculate the distance from the model's position to this average position
-  //         const distanceFromModel = avgPosition.distanceTo(modelPosition);
-  //         // Set visibility based on the calculated distance and sliderValue
-  //         child.visible = distanceFromModel <= sliderValue;
-  //       } else if (child.name.includes("dyna-fixation")) {
-  //         const distanceFromModel = child.position.distanceTo(modelPosition);
-  //         child.visible = distanceFromModel <= sliderValue;
-  //       }
-  //     });
-  //   };
+      // Check if the child's name is "model"
+      if (isAdvanced) {
+        if (child.name === "model") {
+          isVisible = true;
+        } else {
+          // Check each flag in advancedViewFlags
+          advancedViewFlags.forEach((flag, index) => {
+            if (flag && child.name === `direction-${index}`) {
+              isVisible = true;
+            } else if (flag && child.name === `stat-fixation-${index}`) {
+              isVisible = statVizFlags[index];
+            } else if (
+              flag &&
+              (child.name === `dyna-fixation-${index}` ||
+                child.name === `line-${index}`)
+            ) {
+              isVisible = dynaVizFlags[index];
+            }
+          });
+        }
+      } else {
+        if (child.name === "model") {
+          isVisible = true;
+        } else {
+          advancedViewFlags.forEach((flag, index) => {
+            if (child.name === `direction-${index}`) {
+              isVisible = true;
+            } else if (child.name === `stat-fixation-${index}`) {
+              isVisible = statVizFlags[index];
+            } else if (
+              child.name === `dyna-fixation-${index}` ||
+              child.name === `line-${index}`
+            ) {
+              isVisible = dynaVizFlags[index];
+            }
+          });
+        }
+      }
 
-  //   updateVisibilityBasedOnModelPosition();
-  // }, [sliderValue]);
+      // Set the visibility of the child
+      child.visible = isVisible;
+    });
+  }, [advancedViewFlags]); // Depend on advancedViewFlags to re-trigger this effect
 
   return (
     <div
