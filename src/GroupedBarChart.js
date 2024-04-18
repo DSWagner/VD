@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import Plot from "plotly.js-dist-min";
 
+
 const GroupedBarChart = ({tableData, directionColors}) => {
     useEffect(() => {
         const labels = ['-45', '-30', '-15', '0', '15', '30', '45'];
@@ -89,15 +90,22 @@ const GroupedBarChart = ({tableData, directionColors}) => {
                     color: "#e0e0e0",
                   }, }
         })), layout);
+        const updateColors = () => {
+            const tickLabels = document.querySelectorAll('.xtick text');
+            tickLabels.forEach((label) => {
+                const labelWithoutDegree = label.textContent.replace('°', '');
+                const foundPair = labeledColors.find(pair => pair[0] === labelWithoutDegree);
+                if (foundPair) {
+                    label.style.fill = foundPair[1];
+                }
+            });
+        }
+        updateColors(); // Initial color application
 
-        const tickLabels = document.querySelectorAll('.xtick text');
-        tickLabels.forEach((label) => {
-            const labelWithoutDegree = label.textContent.replace('°', ''); // Remove degree sign
-            const foundPair = labeledColors.find(pair => pair[0] === labelWithoutDegree);
-            if (foundPair) {
-                label.style.fill = foundPair[1]; // Set the color of the tick label using the color from the pair
-            }
+        document.querySelector('#tableVizualization').on('plotly_restyle', () => {
+            updateColors(); // Reapply colors after plot interactions
         });
+
 
     }, [tableData, directionColors]); // Empty dependency array ensures this effect runs only once
 
