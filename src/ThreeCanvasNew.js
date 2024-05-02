@@ -39,10 +39,8 @@ const ThreeCanvasNew = ({
     const camera = cameraRef.current;
     const renderer = rendererRef.current;
     // renderer.setSize(500, 500);
-    renderer.setSize(
-      (window.innerWidth * paramFlag) / 12,
-      (window.innerWidth * paramFlag) / 12
-    );
+    const mainViewportSize = (window.innerWidth * paramFlag) / 12;
+    renderer.setSize(mainViewportSize, mainViewportSize);
     renderer.setClearColor(0x19191e, 1);
     let controls = controlsRef.current;
 
@@ -90,6 +88,38 @@ const ThreeCanvasNew = ({
       controls.update(); // Required if damping or auto-rotation is enabled
       renderer.render(scene, camera);
     };
+    // // Animation loop to render the scene
+    // const animate = () => {
+    //   requestAnimationFrame(animate);
+    //   controls.update();
+
+    //   // Render the main viewport
+    //   renderer.setViewport(0, 0, mainViewportSize, mainViewportSize);
+    //   renderer.setScissor(0, 0, mainViewportSize, mainViewportSize);
+    //   renderer.setScissorTest(true);
+    //   renderer.clearColor();
+    //   renderer.render(scene, camera);
+
+    //   // Render the smaller viewport in the top right corner
+    //   const smallViewportSize = mainViewportSize / 4;
+    //   const offsetX = mainViewportSize - smallViewportSize;
+    //   const offsetY = 0; // Top right corner
+    //   renderer.setViewport(
+    //     offsetX,
+    //     offsetY,
+    //     smallViewportSize,
+    //     smallViewportSize
+    //   );
+    //   renderer.setScissor(
+    //     offsetX,
+    //     offsetY,
+    //     smallViewportSize,
+    //     smallViewportSize
+    //   );
+    //   renderer.setScissorTest(true);
+    //   renderer.clearColor();
+    //   renderer.render(scene, camera);
+    // };
     animate();
 
     return () => {
