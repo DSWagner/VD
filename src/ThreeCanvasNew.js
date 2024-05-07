@@ -26,15 +26,16 @@ const ThreeCanvasNew = ({
     // const renderer = rendererRef.current;
     const newSize = (window.innerWidth * paramFlag) / 12;
     VisualRepresentation.renderer.setSize(newSize, newSize);
+    VisualRepresentation.renderer.setClearColor(0x19191e, 1);
   }, [paramFlag]);
 
   /* Loads new model when new model is selected */
   useEffect(() => {
     if (!modelFileName) return; // Don't proceed if modelFileName is not provided
     
-    const rendererSize = (window.innerWidth * paramFlag) / 12;
-    VisualRepresentation.renderer.setSize(rendererSize, rendererSize);
-    VisualRepresentation.renderer.setClearColor(0x19191e, 1);
+    // const rendererSize = (window.innerWidth * paramFlag) / 12;
+    // VisualRepresentation.renderer.setSize(rendererSize, rendererSize);
+    // VisualRepresentation.renderer.setClearColor(0x19191e, 1);
 
     let controls = controlsRef.current;
 
@@ -79,9 +80,15 @@ const ThreeCanvasNew = ({
 
     // Initialize scene, camera, and renderer
     
+    
     observerIds.forEach((observerIdGroup, index) => {
+      // VisualRepresentation.removeFixations(index, "static");
+
       // Create a shallow copy of scene.children to safely iterate over
       const childrenCopy = VisualRepresentation.scene.children.slice();
+      console.log("children start:")
+      console.log(childrenCopy)
+      console.log("children end")
 
       childrenCopy.forEach((child) => {
         // Assuming statVizFlags is an array with the same length as the number of fixation elements

@@ -1,7 +1,7 @@
+import VisualRepresentation from './VisualRepresentation';
+
 export default class VisualElement {
-    positionX;
-    positionY;
-    positionZ;
+    position;
     color;
     size;
     visible;
@@ -9,21 +9,20 @@ export default class VisualElement {
 
     /**
      * Initializes the "abstract" visual element.
-     * @param {number} x The X coordinate.
-     * @param {number} y The Y coordinate.
-     * @param {number} z The Z coordinate.
+     * @param {string} name A name of the obejct.
+     * @param {THREE.Vector3} position The Xposition of the object.
      * @param {string} color A hex representation of the desired color.
      * @param {number} size The size of the element (interpreted as radius for spherical objects).
      * @param {boolean} visible Whether or not the object should be displayed.
      * @returns {VisualElement}
     */
-    constructor(x, y, z, color, size, visible) {
-        this.positionX = x;
-        this.positionY = y;
-        this.positionZ = z;
+    constructor(name, position, color, size, visible) {
+        this.name = name
+        this.position = position;
         this.color = color;
         this.size = size;
         this.visible = visible;
+        this.reference = null;
 
         if (visible)
             this.display();
@@ -34,6 +33,12 @@ export default class VisualElement {
      * @returns {void}
     */
     display() {
-        this.reference = null;
+        
+    }
+
+    remove() {
+        if (this.reference == null) {
+            VisualRepresentation.scene.remove(this.reference);
+        }
     }
 }

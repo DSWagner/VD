@@ -3,12 +3,14 @@ import Observer from './Observer';
 import * as THREE from "three";
 
 export default class VisualRepresentation {
-    static model = null
-    static observers;
+    static model = null;
+    static directions;
     static config = require('./Config.json');
-    static scene = new THREE.Scene();;
+    static scene = new THREE.Scene();
     static camera = new THREE.PerspectiveCamera(60, 1, 0.1, 10000);
     static renderer = new THREE.WebGLRenderer({ antialias: true });
+    static defaultCameraPos;
+    static colors
 
     /**
      * Initializes empty representation, with only basic observer data.
@@ -16,7 +18,8 @@ export default class VisualRepresentation {
      * @returns {VisualRepresentation}
     */
     static initialize() {
-        VisualRepresentation.observers = Array(VisualRepresentation.config.setup.observing_angles.length)
+        VisualRepresentation.directions = Array(VisualRepresentation.config.setup.observing_angles.length).fill([]);
+        VisualRepresentation.colors = Array(VisualRepresentation.config.setup.observing_angles.length).fill(null);
     }
 
     /**
@@ -78,5 +81,21 @@ export default class VisualRepresentation {
         const angleIndex = VisualRepresentation.config.setup.observing_angles.indexOf(angle);
         VisualRepresentation.observers[angleIndex] = new Observer(observerId);
         VisualRepresentation.observers[angleIndex].loadData();
+    }
+
+    static removeFixations(direction, type) {
+        VisualRepresentation.directions[direction].forEach(observer => observer.removeFixations(type));
+    }
+    static addFixations(direction, type) {
+        VisualRepresentation.directions[direction].forEach(observer => observer.addFixations(type));
+    }
+
+    static addObserver(direction, id) {
+        VisualRepresentation.directions[direction] = new Observer(id, direction);
+    }
+    static removeObserver(direction, id) {
+        const index = VisualRepresentation.directions[direction].findIndex(o => o.id == id);
+        VisualRepresentation.directions[direction][index].remove();
+        VisualRepresentation.directions[direction].splice(index, 1);
     }
 }

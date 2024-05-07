@@ -1,7 +1,7 @@
 {
     "setup": {
-        "observing_distance": 144,
-        "observing_elevation": 70,
+        "observing_distance": 430,
+        "observing_elevation": 144,
         "observing_angles": [-45, -30, -15, 0, 15, 30, 45],
         "observing_angle_default": 0
     },

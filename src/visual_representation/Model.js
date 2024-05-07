@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 
 export default class Model {
-    modeName;
+    modelName;
     fullPath;
     color;
     transparency;
@@ -18,8 +18,8 @@ export default class Model {
     */
     constructor(modelName) {
         this.fullPath = VisualRepresentation.config.data_path_model + modelName;
-        this.modeName = modelName.split(".")[0];
-        console.log(this.fullPath)
+        this.modelName = modelName.split(".")[0];
+
         this.loadPromise = new STLLoader().loadAsync(this.fullPath).then((geometry) => {
             geometry.computeBoundingBox();
             this.boundingBoxCenter = geometry.boundingBox.getCenter(
