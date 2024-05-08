@@ -4,7 +4,6 @@ import "./App.css";
 import ModelSelector from "./ModelSelector";
 import GroupedBarChart from "./GroupedBarChart";
 import ThreeCanvas from "./ThreeCanvas";
-import ThreeCanvasNew from "./ThreeCanvasNew";
 import ViolinPlot from "./ViolinPlot";
 import PolarHistogram from "./PolarHistogram";
 import StatTable from "./StatTable";
@@ -78,7 +77,6 @@ function App() {
     });
     setMiddleValue((rangeValues.min + rangeValues.max) / 2);
     setAdvancedViewFlags(Array(7).fill(false));
-    // setDirectionColors({});
   };
 
   const handleExpandTable = () => {
@@ -103,7 +101,6 @@ function App() {
 
   const handleParameters = () => {
     console.log("Parameters button clicked, ", paramFlag);
-    // Add any logic here that you want to execute when the button is clicked
 
     if (paramFlag === 6) {
       setParamFlag(5);
@@ -145,9 +142,6 @@ function App() {
 
   return (
     <div className="App container-fluid" style={{ margin: 0 }}>
-      {/* <div className="row header">
-        <h1>Vizualizácia 3D eye-tracking dát</h1>
-      </div> */}
       <div className="row">
         <div>Zvoľte si 3D objekt na vizualizáciu</div>
         <div>
@@ -157,7 +151,6 @@ function App() {
               Parametre
             </button>
           )}
-          {/* Add this line */}
         </div>
       </div>
 
@@ -182,8 +175,8 @@ function App() {
                 )}
                 {isExpandedTable && (
                   <GroupedBarChart
-                  tableData = {tableData}
-                  directionColors = {directionColors}
+                    tableData={tableData}
+                    directionColors={directionColors}
                   />
                 )}
               </div>
@@ -198,12 +191,12 @@ function App() {
                 {isExpandedViolin && (
                   <div>
                     <label>
-                    <input
-                      type="checkbox"
-                      checked={isCheckboxCheckedViolin}
-                      onChange={handleCheckboxChangeViolin}
-                    />
-                    Zobrazit zvolenych observerov
+                      <input
+                        type="checkbox"
+                        checked={isCheckboxCheckedViolin}
+                        onChange={handleCheckboxChangeViolin}
+                      />
+                      Zobrazit zvolenych observerov
                     </label>
                     <ViolinPlot
                       modelFileName={selectedFile}
@@ -212,7 +205,7 @@ function App() {
                       selectedObserverIds={selectedObserverIds}
                     />
                   </div>
-                  )}
+                )}
               </div>
 
               <div>
@@ -225,21 +218,21 @@ function App() {
                 {isExpandedPolar && (
                   <div>
                     <label>
-                    <input
-                      type="checkbox"
-                      checked={isCheckboxCheckedPolar}
-                      onChange={handleCheckboxChangePolar}
-                    />
-                    Zobrazit zvolenych observerov
+                      <input
+                        type="checkbox"
+                        checked={isCheckboxCheckedPolar}
+                        onChange={handleCheckboxChangePolar}
+                      />
+                      Zobrazit zvolenych observerov
                     </label>
                     <PolarHistogram
                       modelFileName={selectedFile}
                       directionColors={directionColors}
                       isSelected={isCheckboxCheckedPolar}
-                      selectedObserverIds={selectedObserverIds} 
+                      selectedObserverIds={selectedObserverIds}
                     />
                   </div>
-                  )}
+                )}
               </div>
             </>
           )}
@@ -247,7 +240,7 @@ function App() {
         <div className={`col-${paramFlag.toString()}`}>
           {selectedFile && (
             <>
-              <ThreeCanvasNew
+              <ThreeCanvas
                 modelFileName={selectedFile}
                 observerIds={selectedObserverIds}
                 cameraPos={cameraPos}

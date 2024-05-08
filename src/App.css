@@ -22,8 +22,8 @@
 }
 
 body {
-  background-color: #19191e !important; /* replace with your desired color */
-  color: #e0e0e0 !important;
+  background-color: white !important; /* replace with your desired color */
+  color: black !important;
 }
 
 .canvas-container {
@@ -39,13 +39,13 @@ body {
 } */
 
 select {
-  background-color: #4c2b62; /* replace with your desired color */
-  color: #e0e0e0; /* replace with your desired color for the text */
+  background-color: #c16df9; /* replace with your desired color */
+  color: black; /* replace with your desired color for the text */
 }
 
 button {
-  background-color: #4c2b62; /* replace with your desired color */
-  color: #e0e0e0; /* replace with your desired color for the text */
+  background-color: #c16df9; /* replace with your desired color */
+  color: black; /* replace with your desired color for the text */
 }
 
 .centered-table {
@@ -56,7 +56,7 @@ button {
 }
 
 .centered-table td {
-  border: 1px solid #e0e0e0;
+  border: 1px solid black;
   padding: 4px;
 }
 

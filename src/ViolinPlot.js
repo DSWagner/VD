@@ -1,7 +1,12 @@
 import React, { useEffect } from "react";
 import Plot from "plotly.js-dist-min";
 
-const ViolinPlot = ({ modelFileName, directionColors, isSelected, selectedObserverIds}) => {
+const ViolinPlot = ({
+  modelFileName,
+  directionColors,
+  isSelected,
+  selectedObserverIds,
+}) => {
   useEffect(() => {
     async function fetchJsonData(modelFileName) {
       //   console.log(modelFileName);
@@ -34,26 +39,25 @@ const ViolinPlot = ({ modelFileName, directionColors, isSelected, selectedObserv
 
       const groupedByDirection = jsonData.reduce((acc, obj) => {
         const direction = obj.condition.direction;
-        if(isSelected){
-          if(selectedObserverIds[direction].includes(obj["observer id"])){
+        if (isSelected) {
+          if (selectedObserverIds[direction].includes(obj["observer id"])) {
             if (!acc[direction]) {
-              acc[direction] = [];
+              acc[direction] = { data: [], direction: direction };
             }
-            acc[direction].push(obj);
+            acc[direction].data.push(obj);
           }
+        } else {
+          if (!acc[direction]) {
+            acc[direction] = { data: [], direction: direction };
+          }
+          acc[direction].data.push(obj);
         }
-        else{
-        if (!acc[direction]) {
-          acc[direction] = [];
-        }
-        acc[direction].push(obj);
-      }
         return acc;
       }, {});
 
       const violinPlotData = Object.keys(groupedByDirection).map(
         (direction) => {
-          const objs = groupedByDirection[direction];
+          const objs = groupedByDirection[direction].data;
           const values = objs.map((obj) => {
             const totalDuration = obj.fixations.reduce(
               (acc, fixation) => acc + fixation.duration / 1000,
@@ -65,9 +69,12 @@ const ViolinPlot = ({ modelFileName, directionColors, isSelected, selectedObserv
                 : 0;
             return averageDuration;
           });
-          // Apply the formula to transform the direction value
           const transformedDirection = `${(direction - 3) * 15}°`;
-          return { name: transformedDirection, values };
+          return {
+            name: transformedDirection,
+            values,
+            originalDirection: direction,
+          };
         }
       );
 
@@ -76,16 +83,15 @@ const ViolinPlot = ({ modelFileName, directionColors, isSelected, selectedObserv
 
     // Define an async function inside useEffect
     const fetchData = async () => {
-      
       const jsonData = await fetchJsonData(modelFileName);
-      
+
       if (jsonData) {
         // console.log(jsonData);
 
         const violin_data = extractViolinPlotData(jsonData);
         // console.log(violin_data);
 
-        const plotData = violin_data.map((item, index) => ({
+        const plotData = violin_data.map((item) => ({
           type: "violin",
           y: item.values,
           name: item.name,
@@ -96,10 +102,7 @@ const ViolinPlot = ({ modelFileName, directionColors, isSelected, selectedObserv
             visible: true,
           },
           marker: {
-            color:
-              directionColors[index] != null
-                ? directionColors[index]
-                : "#ffffff", // Adjusted to access the 'directions' array
+            color: directionColors[item.originalDirection] || "#ffffff",
           },
         }));
 
@@ -110,17 +113,17 @@ const ViolinPlot = ({ modelFileName, directionColors, isSelected, selectedObserv
             tickvals: violin_data.map((item, index) => index), // Assuming you want to display all violin plots
             ticktext: violin_data.map((item) => item.name), // The names of your violin plots
             title: "Smer",
-            // gridcolor: "#e0e0e0",
+            // gridcolor: "#000000",
           },
           yaxis: {
             zeroline: false,
             title: "Priemerná dĺžka fixácií na pozorovateľa (s)",
-            // gridcolor: "#e0e0e0",
+            // gridcolor: "#000000",
           },
-          paper_bgcolor: "#19191e", // Example background color
-          plot_bgcolor: "#19191e", // Example background color
+          paper_bgcolor: "#ffffff", // Example background color
+          plot_bgcolor: "#ffffff", // Example background color
           font: {
-            color: "#e0e0e0", // Set the global font color to white
+            color: "#000000", // Set the global font color to white
             // family: "Arial, sans-serif", // Optionally, set the font family
             // size: 12, // Optionally, set the font size
           },

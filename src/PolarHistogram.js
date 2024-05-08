@@ -2,26 +2,26 @@
 import React, { useEffect } from "react";
 import Plot from "plotly.js-dist-min";
 
-const PolarHistogram = ({ modelFileName, directionColors, isSelected, selectedObserverIds}) => {
+const PolarHistogram = ({
+  modelFileName,
+  directionColors,
+  isSelected,
+  selectedObserverIds,
+}) => {
   useEffect(() => {
     const processData = (data) => {
-      // Process your data here to fit the polar histogram requirements
-      // This is a placeholder function, adapt it based on your actual data structure
       console.log(data);
-      const barColors = Array.from({ length: 7 }, (_, index) =>
-        directionColors[index] != null ? directionColors[index] : "#ffffff"
-      );
-      console.log(barColors);
-
       return data.map((item, index) => ({
         r: item.values,
         theta: item.directions,
         type: "barpolar",
         marker: {
-          color: barColors, // Use the modulo operator to loop through colors
+          color: item.directions.map(
+            (direction) => directionColors[direction / 15 + 3] || "#ffffff"
+          ), // Adjust the index calculation as per your direction logic
           line: {
-            color: "#e0e0e0", // This sets the outline color to black
-            width: 1, // This sets the outline width. Adjust as needed.
+            color: "#000000",
+            width: 1,
           },
         },
       }));
@@ -58,34 +58,35 @@ const PolarHistogram = ({ modelFileName, directionColors, isSelected, selectedOb
         const trueDirection = observer.condition.direction;
         const direction = (observer.condition.direction - 3) * 15;
         const fixations = observer.fixations;
-        if(isSelected){
-          if(selectedObserverIds[trueDirection].includes(observer["observer id"])){
+        if (isSelected) {
+          if (
+            selectedObserverIds[trueDirection].includes(observer["observer id"])
+          ) {
             if (!directionGroups[direction]) {
               directionGroups[direction] = [];
             }
-    
+
             let totalDuration = 0;
             fixations.forEach((fixation) => {
               totalDuration += fixation.duration;
             });
             const averageDuration = totalDuration / 1000 / fixations.length;
-    
+
             directionGroups[direction].push(averageDuration);
           }
-        }
-        else{
-        if (!directionGroups[direction]) {
-          directionGroups[direction] = [];
-        }
+        } else {
+          if (!directionGroups[direction]) {
+            directionGroups[direction] = [];
+          }
 
-        let totalDuration = 0;
-        fixations.forEach((fixation) => {
-          totalDuration += fixation.duration;
-        });
-        const averageDuration = totalDuration / 1000 / fixations.length;
+          let totalDuration = 0;
+          fixations.forEach((fixation) => {
+            totalDuration += fixation.duration;
+          });
+          const averageDuration = totalDuration / 1000 / fixations.length;
 
-        directionGroups[direction].push(averageDuration);
-      }
+          directionGroups[direction].push(averageDuration);
+        }
       });
 
       // Convert directionGroups object to an array of [key, value] pairs
@@ -142,7 +143,7 @@ const PolarHistogram = ({ modelFileName, directionColors, isSelected, selectedOb
             radialaxis: {
               ticksuffix: "s",
               angle: 0,
-              gridcolor: "#19191e",
+              gridcolor: "#ffffff",
               title: "Priemerná dĺžka fixácií",
             },
             angularaxis: {
@@ -150,14 +151,14 @@ const PolarHistogram = ({ modelFileName, directionColors, isSelected, selectedOb
               tickmode: "array",
               tickvals: [315, 330, 345, 0, 15, 30, 45],
               ticktext: ["-45°", "-30°", "-15°", "0°", "15°", "30°", "45°"],
-              gridcolor: "#19191e",
+              gridcolor: "#ffffff",
             },
-            bgcolor: "#19191e",
+            bgcolor: "#ffffff",
           },
-          paper_bgcolor: "#19191e", // Example background color
-          plot_bgcolor: "#19191e", // Example background color
+          paper_bgcolor: "#ffffff", // Example background color
+          plot_bgcolor: "#ffffff", // Example background color
           font: {
-            color: "#e0e0e0", // Set the global font color to white
+            color: "#000000", // Set the global font color to white
             // family: "Arial, sans-serif", // Optionally, set the font family
             // size: 12, // Optionally, set the font size
           },
@@ -173,7 +174,7 @@ const PolarHistogram = ({ modelFileName, directionColors, isSelected, selectedOb
               yanchor: "bottom",
               font: {
                 size: 16,
-                color: "#e0e0e0",
+                color: "#000000",
               },
             },
           ],

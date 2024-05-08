@@ -4,22 +4,31 @@ import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 const ThreeCanvas = ({
-  observerId,
   modelFileName,
-  timeViz,
-  setTimeViz,
-  obsPos,
-  setObsPos,
+  observerIds,
+  cameraPos,
+  statVizFlags,
+  dynaVizFlags,
+  directionColors,
+  paramFlag,
+  rangeValues,
+  advancedViewFlags,
 }) => {
   const sceneRef = useRef(new THREE.Scene());
-  const cameraRef = useRef(
-    new THREE.PerspectiveCamera(60, 500 / 500, 0.1, 1000)
-  );
+  const cameraRef = useRef(new THREE.PerspectiveCamera(60, 1, 0.1, 10000));
   const rendererRef = useRef(new THREE.WebGLRenderer({ antialias: true }));
   const controlsRef = useRef(null);
   const canvasRef = useRef(null);
-  const originalCameraPosRef = useRef(null);
-  const observerPosRef = useRef(null);
+  const cameraPosRef = useRef(null);
+  const centerRef = useRef(null);
+  // Inside your component
+  const prevDynaVizFlagsRef = useRef();
+
+  useEffect(() => {
+    const renderer = rendererRef.current;
+    const newSize = (window.innerWidth * paramFlag) / 12;
+    renderer.setSize(newSize, newSize);
+  }, [paramFlag]); // Depend on paramFlag to re-trigger this effect
 
   useEffect(() => {
     if (!modelFileName) return; // Don't proceed if modelFileName is not provided
@@ -29,8 +38,11 @@ const ThreeCanvas = ({
     const scene = sceneRef.current;
     const camera = cameraRef.current;
     const renderer = rendererRef.current;
-    renderer.setSize(500, 500);
-    renderer.setClearColor(0x19191e, 1);
+    // renderer.setSize(500, 500);
+    const mainViewportSize = (window.innerWidth * paramFlag) / 12;
+    renderer.setSize(mainViewportSize, mainViewportSize);
+    renderer.setClearColor(0xffffff, 1);
+    let controls = controlsRef.current;
 
     // Append the renderer to the canvas div
     canvasRef.current.innerHTML = ""; // Clear the canvas container
@@ -49,151 +61,23 @@ const ThreeCanvas = ({
         opacity: 0.5,
       });
       const mesh = new THREE.Mesh(geometry, material);
-      // mesh.position.x += 200;
-      mesh.name = "shape";
+      mesh.name = "model";
       scene.add(mesh);
 
       // This could be adjusted to make sure the model is fully visible based on the camera's angle and the object's dimensions
       const cameraPosition = new THREE.Vector3(boundingBoxCenter.x, 144, 430);
-
-      // console.log(camera.position);
+      cameraPosRef.current = cameraPosition.clone();
 
       camera.position.copy(cameraPosition);
       camera.lookAt(boundingBoxCenter);
-
-      originalCameraPosRef.current = camera.position.clone();
+      centerRef.current = boundingBoxCenter.clone();
 
       // Update the controls target to look at the center of the model
       controls.target.copy(boundingBoxCenter);
-
-      // Ensure the scene is rendered from the new camera position
-      renderer.render(scene, camera);
-
-      function addFixationSpheres(fixations, offset, matrix, rotationRadians) {
-        // Invert the matrix to apply the rotation in the opposite direction
-        const invertedMatrix = matrix.clone().invert();
-
-        // Create a rotation matrix for y-axis
-        const rotationMatrix = new THREE.Matrix4();
-        rotationMatrix.makeRotationY(-rotationRadians);
-
-        // Combine the rotation matrix with the inverted matrix
-        const finalMatrix = new THREE.Matrix4();
-        finalMatrix.multiplyMatrices(rotationMatrix, invertedMatrix);
-
-        fixations.forEach((fixation) => {
-          const position = fixation.position;
-          const geometry = new THREE.SphereGeometry(5, 32, 32); // Adjust the size as needed
-          const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Red color for visibility
-          const sphere = new THREE.Mesh(geometry, material);
-
-          sphere.position.x = position[0] - offset[0];
-          sphere.position.y = position[1] - offset[1];
-          sphere.position.z = position[2] - offset[2];
-
-          // Apply the inverted matrix to each sphere
-          sphere.applyMatrix4(finalMatrix);
-
-          // Add the sphere to the scene
-          sceneRef.current.add(sphere);
-        });
-      }
-
-      // Load corresponding JSON file if observerId is selected
-      if (observerId) {
-        // Create a sphere geometry with a radius of 5 and 32 width/height segments
-        const observerGeo = new THREE.SphereGeometry(10, 32, 32);
-        // Create a blue basic material
-        const observerMat = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-        // Create a mesh with the geometry and material
-        const observerSph = new THREE.Mesh(observerGeo, observerMat);
-        // Set the name of the sphere
-        observerSph.name = "observer";
-        // Set the position of the sphere to the original camera position
-        observerSph.position.copy(originalCameraPosRef.current);
-        observerPosRef.current = observerSph.position.clone();
-        // Add the sphere to the scene
-        sceneRef.current.add(observerSph);
-
-        const jsonFileName = modelFileName.replace(".stl", ".json");
-        const jsonFilePath = `${process.env.PUBLIC_URL}/Dataset/gazePerObject/${jsonFileName}`;
-
-        // Fetch the JSON file
-        fetch(jsonFilePath)
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-          })
-          .then((data) => {
-            // Assuming 'data' is the array of objects
-            const matchingObject = data.find(
-              (item) => item["observer id"].toString() === observerId.toString()
-            );
-            if (matchingObject) {
-              // console.log("Found matching object:", matchingObject);
-              // Access and log the orientation from the matching object
-              const orientation = matchingObject.condition.orientation;
-              // console.log("Orientation of the matching object:", orientation);
-
-              const offset = matchingObject.condition.offset;
-
-              // Creating a Matrix4 from the 3x3 rotation matrix
-              const matrix = new THREE.Matrix4();
-              matrix.set(
-                orientation[0],
-                orientation[1],
-                orientation[2],
-                0,
-                orientation[3],
-                orientation[4],
-                orientation[5],
-                0,
-                orientation[6],
-                orientation[7],
-                orientation[8],
-                0,
-                0,
-                0,
-                0,
-                1
-              );
-
-              // Define direction and calculate rotation in degrees
-              const direction = matchingObject.condition.direction;
-              console.log("Direction of the matching object:", direction);
-              const rotationIncrement = 15; // Degrees to increment/decrement per direction unit
-              let rotationDegrees = (direction - 3) * rotationIncrement;
-
-              // Convert degrees to radians for THREE.js
-              let rotationRadians = THREE.MathUtils.degToRad(rotationDegrees);
-              // console.log(rotationRadians);
-
-              // Apply rotation around Y axis
-              mesh.rotation.y = rotationRadians;
-
-              // Read and console log the fixations attribute
-              const fixations = matchingObject.fixations;
-              // console.log(matchingObject);
-              // console.log(fixations);
-
-              // console.log("Fixations:", fixations);
-              addFixationSpheres(fixations, offset, matrix, rotationRadians);
-            } else {
-              console.log(
-                "No matching object found for observer ID:",
-                observerId
-              );
-            }
-          })
-          .catch((error) => console.error("Error loading JSON file:", error));
-      }
     });
 
     // Add orbit controls to make the object rotatable and zoomable
-    controlsRef.current = new OrbitControls(camera, renderer.domElement);
-    const controls = controlsRef.current;
+    controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true; // Enable damping (inertia), which makes for smoother orbiting
     controls.dampingFactor = 0.1;
     controls.addEventListener("change", () => renderer.render(scene, camera)); // Update the view on control change
@@ -212,256 +96,629 @@ const ThreeCanvas = ({
       renderer.dispose(); // Dispose of the renderer
       controls.dispose();
     };
-    // }, [observerId, modelFileName, tableData, setTableData]); // Depend on modelFileName to re-trigger loading
-  }, [observerId, modelFileName]); // Depend on modelFileName to re-trigger loading
+  }, [modelFileName]); // Depend on modelFileName to re-trigger loading
 
   useEffect(() => {
-    if (timeViz) {
-      const scene = sceneRef.current;
-      const camera = cameraRef.current;
-      const renderer = rendererRef.current;
-      const controls = controlsRef.current;
+    if (!modelFileName) return; // Don't proceed if modelFileName is not provided
 
-      scene.children = scene.children.filter((child) => {
-        if (
-          child.name === "red" ||
-          child.name === "line" ||
-          child.name === "vector"
-        ) {
-          if (child.geometry) {
-            child.geometry.dispose(); // Disposes the geometry
-          }
-          if (child.material) {
-            if (Array.isArray(child.material)) {
-              // In case of multi-material
-              child.material.forEach((material) => material.dispose());
-            } else {
-              child.material.dispose(); // Disposes the material
-            }
-          }
-          return false; // Filter out the child, effectively removing it
+    // Initialize scene, camera, and renderer
+    const scene = sceneRef.current;
+
+    observerIds.forEach((observerIdGroup, index) => {
+      // Create a shallow copy of scene.children to safely iterate over
+      const childrenCopy = scene.children.slice();
+
+      childrenCopy.forEach((child) => {
+        // Assuming statVizFlags is an array with the same length as the number of fixation elements
+        if (child.name === `stat-fixation-${index}`) {
+          scene.remove(child); // Remove the child from the scene
         }
-        return true; // Keep the child in the scene
       });
+      if (observerIdGroup && observerIdGroup.length > 0) {
+        observerIdGroup.forEach((observerId) => {
+          // Calculate the rotation angle in radians
+          const degrees = (index - 3) * 15;
+          const radians = degrees * (Math.PI / 180);
 
-      function addFixationSpheres(
-        fixations,
-        offset,
-        matrix,
-        rotationRadians,
-        index = 0
-      ) {
-        // Stop the recursion if we've displayed all fixations
-        if (index >= fixations.length) {
-          return;
-        }
-        // Find the last sphere added to the scene
-        const lastSphere = sceneRef.current.children
-          .filter(
-            (child) => child instanceof THREE.Mesh && child.name === "red"
-          )
-          .pop();
-        // Invert the matrix to apply the rotation in the opposite direction
-        const invertedMatrix = matrix.clone().invert();
-        // Create a rotation matrix for y-axis
-        const rotationMatrix = new THREE.Matrix4();
-        rotationMatrix.makeRotationY(-rotationRadians);
+          // Get the original camera position
+          const originalPosition = cameraPosRef.current.clone();
 
-        // Combine the rotation matrix with the inverted matrix
-        const finalMatrix = new THREE.Matrix4();
-        finalMatrix.multiplyMatrices(rotationMatrix, invertedMatrix);
+          // Create a rotation matrix for rotating around the Y axis
+          const rotationMatrix = new THREE.Matrix4();
+          rotationMatrix.makeRotationY(radians);
 
-        const fixation = fixations[index];
-        const position = fixation.position;
-        const geometry = new THREE.SphereGeometry(5, 32, 32); // Adjust the size as needed
-        const material = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Green color for visibility
-        const sphere = new THREE.Mesh(geometry, material);
+          // Apply the rotation to the camera position
+          const rotatedPosition = originalPosition.applyMatrix4(rotationMatrix);
 
-        sphere.name = "red";
-
-        sphere.position.x = position[0] - offset[0];
-        sphere.position.y = position[1] - offset[1];
-        sphere.position.z = position[2] - offset[2];
-
-        // Apply the inverted matrix to each sphere
-        sphere.applyMatrix4(finalMatrix);
-
-        const originalPos = sphere.position;
-
-        const directionVector = new THREE.Vector3(
-          originalCameraPosRef.current.x - sphere.position.x,
-          originalCameraPosRef.current.y - sphere.position.y,
-          originalCameraPosRef.current.z - sphere.position.z
-        ).normalize();
-
-        const observerDist = originalPos.distanceTo(observerPosRef.current);
-        // Create an arrow helper with the direction vector
-        const arrowHelper = new THREE.ArrowHelper(
-          directionVector,
-          sphere.position,
-          observerDist,
-          0x800080,
-          0,
-          0
-        ); // 0x800080 is the color purple
-        arrowHelper.name = "vector";
-        sceneRef.current.add(arrowHelper);
-
-        const zDistance =
-          -originalPos.z + 75 + index * (200 / fixations.length);
-        const newPosition = new THREE.Vector3()
-          .copy(sphere.position)
-          .add(directionVector.multiplyScalar(zDistance));
-
-        // Set the new position to the sphere
-        sphere.position.copy(newPosition);
-        // sphere.position.z = zDistance;
-        console.log(sphere.position.z);
-
-        // Add the sphere to the scene
-        sceneRef.current.add(sphere);
-
-        // If there's a last sphere, draw a line to the current sphere
-        if (index > 0 && lastSphere) {
-          const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-            lastSphere.position,
-            sphere.position,
-          ]);
-          const lineMaterial = new THREE.LineBasicMaterial({
-            color: 0xffffff,
+          const geometry = new THREE.SphereGeometry(10, 32, 32);
+          const material = new THREE.MeshBasicMaterial({
+            color:
+              directionColors[index] != null
+                ? directionColors[index]
+                : "#ffffff",
           });
-          const line = new THREE.Line(lineGeometry, lineMaterial);
-          line.name = "line";
-          scene.add(line);
+
+          const observerChild = scene.children.find(
+            (child) => child.name === `direction-${index}`
+          );
+          if (observerChild) {
+            scene.remove(observerChild);
+          }
+
+          const sphere = new THREE.Mesh(geometry, material);
+          sphere.position.copy(rotatedPosition);
+          sphere.name = `direction-${index}`;
+          scene.add(sphere);
+
+          const jsonFileName = modelFileName.replace(".stl", ".json");
+          const jsonFilePath = `${process.env.PUBLIC_URL}/Dataset/gazePerObject/${jsonFileName}`;
+
+          function addFixationSpheres(fixations, offset, matrix, direction) {
+            const invertedMatrix = matrix.clone().invert();
+
+            fixations.forEach((fixation) => {
+              const position = fixation.position;
+              const radius = Math.max(1, (fixation.duration * 10) / 1000);
+              const geometry = new THREE.SphereGeometry(radius, 32, 32);
+              const material = new THREE.MeshBasicMaterial({
+                color:
+                  directionColors[index] != null
+                    ? directionColors[index]
+                    : "#ffffff",
+              });
+              const sphere = new THREE.Mesh(geometry, material);
+
+              sphere.position.x = position[0] - offset[0];
+              sphere.position.y = position[1] - offset[1];
+              sphere.position.z = position[2] - offset[2];
+
+              sphere.applyMatrix4(invertedMatrix);
+
+              sphere.name = `stat-fixation-${direction}`;
+
+              sphere.visible = statVizFlags[index];
+
+              sceneRef.current.add(sphere);
+            });
+          }
+
+          // Fetch the JSON file
+          fetch(jsonFilePath)
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then((data) => {
+              const matchingObject = data.find(
+                (item) =>
+                  item["observer id"].toString() === observerId.toString()
+              );
+              if (matchingObject) {
+                const orientation = matchingObject.condition.orientation;
+                const offset = matchingObject.condition.offset;
+                const matrix = new THREE.Matrix4();
+                matrix.set(
+                  orientation[0],
+                  orientation[1],
+                  orientation[2],
+                  0,
+                  orientation[3],
+                  orientation[4],
+                  orientation[5],
+                  0,
+                  orientation[6],
+                  orientation[7],
+                  orientation[8],
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                );
+
+                const fixations = matchingObject.fixations;
+                addFixationSpheres(fixations, offset, matrix, index);
+              } else {
+                console.log(
+                  "No matching object found for observer ID:",
+                  observerId
+                );
+              }
+            })
+            .catch((error) => console.error("Error loading JSON file:", error));
+        });
+      } else {
+        // Remove the child with name `direction-${index}`
+        const directionChild = scene.children.find(
+          (child) => child.name === `direction-${index}`
+        );
+        if (directionChild) {
+          scene.remove(directionChild);
         }
+      }
+    });
+  }, [modelFileName, observerIds]); // Depend on modelFileName to re-trigger loading
 
-        // Animation logic
-        let startTime = Date.now();
-        let endTime = startTime + fixation.duration;
+  useEffect(() => {
+    if (!modelFileName || cameraPos == null) return; // Don't proceed if modelFileName is not provided
 
-        function animate() {
-          let now = Date.now();
-          let elapsed = now - startTime;
-          let fraction = elapsed / 75;
+    // Initialize scene, camera, and renderer
+    const scene = sceneRef.current;
+    const camera = cameraRef.current;
 
-          if (now < endTime) {
-            // Update sphere scale based on the fraction of the duration elapsed
-            // This example linearly scales the sphere from 1 to 2 times its original size
-            let scale = Math.log(fraction); // Adjust this formula as needed
-            sphere.scale.set(scale, scale, scale);
+    // Assuming cameraPos is available and is the value you want to match in the child's name
+    const targetName = `direction-${cameraPos}`;
+    const targetChild = scene.children.find(
+      (child) => child.name === targetName
+    );
+    if (targetChild) {
+      camera.position.copy(targetChild.position.clone());
+    } else {
+      console.log("No child found with the name:", targetName);
+    }
+  }, [modelFileName, cameraPos]); // Depend on modelFileName to re-trigger loading
 
-            requestAnimationFrame(animate);
-          } else {
-            // Continue with the next fixation
-            addFixationSpheres(
-              fixations,
-              offset,
-              matrix,
-              rotationRadians,
-              index + 1
-            );
+  useEffect(() => {
+    if (!modelFileName) return; // Don't proceed if modelFileName is not provided
+
+    // Initialize scene, camera, and renderer
+    const scene = sceneRef.current;
+
+    // Loop through each statVizFlag
+    statVizFlags.forEach((isVisible, index) => {
+      // Construct the name to look for
+      const targetName = `stat-fixation-${index}`;
+
+      const isAdvanced =
+        advancedViewFlags[index] ||
+        !advancedViewFlags.some((flag) => flag === true);
+
+      // Find children with the matching name
+      scene.children.forEach((child) => {
+        if (child.name === targetName && isAdvanced) {
+          // Set visibility based on the corresponding statVizFlag
+          child.visible = isVisible;
+        }
+      });
+    });
+  }, [modelFileName, statVizFlags]); // Depend on modelFileName to re-trigger loading
+
+  useEffect(() => {
+    // Initialize scene, camera, and renderer
+    const scene = sceneRef.current;
+
+    // Iterate through each key-value pair in directionColors
+    Object.entries(directionColors).forEach(([key, colorValue]) => {
+      // Iterate through each child in the scene
+      scene.children.forEach((child) => {
+        // Check if the child's name matches the pattern "direction-${key}" or "stat-fixation-${key}"
+        if (
+          child.name === `direction-${key}` ||
+          child.name === `stat-fixation-${key}` ||
+          child.name === `dyna-fixation-${key}` ||
+          child.name === `line-${key}`
+        ) {
+          // Assuming the child is a Mesh and has a material property
+          if (child.material && child.material.color) {
+            // Update the color of the child
+            child.material.color.set(colorValue);
           }
         }
+      });
+    });
+  }, [directionColors]);
 
-        animate();
-      }
+  useEffect(() => {
+    // Initialize scene, camera, and renderer
+    if (!modelFileName) return;
+    const scene = sceneRef.current;
 
-      if (observerId) {
+    const prevDynaVizFlags = prevDynaVizFlagsRef.current;
+    let direction = -1;
+
+    if (prevDynaVizFlags) {
+      dynaVizFlags.forEach((flag, index) => {
+        if (flag !== prevDynaVizFlags[index]) {
+          console.log(`Value changed at index ${index}:`, flag);
+          direction = index;
+        }
+      });
+    }
+
+    // Update the ref to the current state for the next render
+    prevDynaVizFlagsRef.current = dynaVizFlags;
+
+    if (direction == -1) return;
+
+    if (!dynaVizFlags[direction]) {
+      // Create a shallow copy of scene.children to safely iterate over
+      const childrenCopy = scene.children.slice();
+
+      childrenCopy.forEach((child) => {
+        // Assuming statVizFlags is an array with the same length as the number of fixation elements
+        if (
+          child.name === `dyna-fixation-${direction}` ||
+          child.name === `line-${direction}`
+        ) {
+          scene.remove(child); // Remove the child from the scene
+        }
+      });
+    } else {
+      const observerIdGroup = observerIds[direction];
+
+      if (observerIdGroup && observerIdGroup.length > 0) {
         const jsonFileName = modelFileName.replace(".stl", ".json");
         const jsonFilePath = `${process.env.PUBLIC_URL}/Dataset/gazePerObject/${jsonFileName}`;
 
-        // Fetch the JSON file
-        fetch(jsonFilePath)
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! Status: ${response.status}`);
+        observerIdGroup.forEach((observerId) => {
+          // Iterate through each observerId in the group
+          let lastCylinderPosition = null; // Outside the function, to keep track of the last cylinder's position
+          function addFixationSpheres(
+            fixations,
+            offset,
+            matrix,
+            direction,
+            index = 0
+          ) {
+            // Base case: if index is out of bounds, return to stop the recursion
+            if (index >= fixations.length) {
+              return;
             }
-            return response.json();
-          })
-          .then((data) => {
-            // Assuming 'data' is the array of objects
-            const matchingObject = data.find(
-              (item) => item["observer id"].toString() === observerId.toString()
+
+            const fixation = fixations[index];
+            const invertedMatrix = matrix.clone().invert();
+            const position = fixation.position;
+            const radius = Math.max(1, (fixation.duration * 10) / 1000);
+            const geometry = new THREE.CylinderGeometry(
+              radius,
+              radius,
+              fixation.duration / 20,
+              32
             );
-            if (matchingObject) {
-              // console.log("Found matching object:", matchingObject);
-              // Access and log the orientation from the matching object
-              const orientation = matchingObject.condition.orientation;
-              // console.log("Orientation of the matching object:", orientation);
+            const material = new THREE.MeshBasicMaterial({
+              color:
+                directionColors[direction] != null
+                  ? directionColors[direction]
+                  : "#ffffff",
+              opacity: 0.6, // Set opacity to 75%
+              transparent: true, // Enable transparency
+            });
+            const cylinder = new THREE.Mesh(geometry, material);
 
-              const offset = matchingObject.condition.offset;
+            cylinder.position.x = position[0] - offset[0];
+            cylinder.position.y = position[1] - offset[1];
+            cylinder.position.z = position[2] - offset[2];
+            cylinder.applyMatrix4(invertedMatrix);
+            cylinder.name = `dyna-fixation-${direction}`;
+            // sceneRef.current.add(sphere);
 
-              // Creating a Matrix4 from the 3x3 rotation matrix
-              const matrix = new THREE.Matrix4();
-              matrix.set(
-                orientation[0],
-                orientation[1],
-                orientation[2],
-                0,
-                orientation[3],
-                orientation[4],
-                orientation[5],
-                0,
-                orientation[6],
-                orientation[7],
-                orientation[8],
-                0,
-                0,
-                0,
-                0,
-                1
+            const observerChild = scene.children.find(
+              (child) => child.name === `direction-${direction}`
+            );
+
+            if (observerChild) {
+              const observerPosition = observerChild.position;
+              const vectorFromModelToObserver = new THREE.Vector3().subVectors(
+                observerPosition,
+                centerRef.current
               );
 
-              // Define direction and calculate rotation in degrees
-              const direction = matchingObject.condition.direction;
-              console.log("Direction of the matching object:", direction);
-              const rotationIncrement = 15; // Degrees to increment/decrement per direction unit
-              let rotationDegrees = (direction - 3) * rotationIncrement;
-
-              // Convert degrees to radians for THREE.js
-              let rotationRadians = THREE.MathUtils.degToRad(rotationDegrees);
-              // console.log(rotationRadians);
-
-              // Read and console log the fixations attribute
-              const fixations = matchingObject.fixations;
-              // console.log("Fixations:", fixations);
-              addFixationSpheres(fixations, offset, matrix, rotationRadians);
-            } else {
-              console.log(
-                "No matching object found for observer ID:",
-                observerId
+              const targetPosition = new THREE.Vector3().addVectors(
+                cylinder.position,
+                vectorFromModelToObserver
               );
+              cylinder.lookAt(targetPosition);
+              cylinder.rotateX(Math.PI / 2);
+
+              // Calculate the projection of sphere.position onto vectorFromModelToObserver
+              const projectionScalar =
+                cylinder.position.dot(vectorFromModelToObserver) /
+                vectorFromModelToObserver.lengthSq();
+
+              const projectionVector = vectorFromModelToObserver
+                .clone()
+                .multiplyScalar(projectionScalar);
+
+              // Calculate the distance from the projection point to the origin of the vector
+              const originToProjectionDistance = projectionVector.length();
+              // Move the sphere by this distance in the opposite direction of the vector
+              let moveDirection = vectorFromModelToObserver.normalize();
+              moveDirection =
+                projectionScalar >= 0 ? moveDirection.negate() : moveDirection;
+              const moveVector = moveDirection.multiplyScalar(
+                originToProjectionDistance
+              );
+              cylinder.position.add(moveVector);
+
+              // Now, apply an incremental distance to the sphere in the direction of vectorFromModelToObserver
+              // Normalize the vector for direction, and scale it by the incremental distance
+              const incrementalMoveVector =
+                projectionScalar >= 0
+                  ? vectorFromModelToObserver.normalize().negate()
+                  : vectorFromModelToObserver.normalize();
+              let increment = 100 + fixation["start timestamp"] * 50;
+              let incrementaDistance = incrementalMoveVector
+                .clone()
+                .multiplyScalar(increment);
+              cylinder.position.add(incrementaDistance);
+
+              const currentCylinderPosition = cylinder.position.clone();
+
+              increment = fixation.duration / 40;
+              incrementaDistance = incrementalMoveVector
+                .clone()
+                .multiplyScalar(increment);
+              cylinder.position.add(incrementaDistance);
+
+              // Check if there's a previous cylinder to connect to
+              if (lastCylinderPosition) {
+                // Create a geometry that represents a line between the last cylinder and the current one
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+                  lastCylinderPosition,
+                  currentCylinderPosition,
+                ]);
+
+                // Use the same material color as the cylinder
+                const lineMaterial = new THREE.LineBasicMaterial({
+                  color:
+                    directionColors[direction] != null
+                      ? directionColors[direction]
+                      : "#ffffff",
+                  opacity: 0.6, // Set opacity to 75%
+                  transparent: true, // Enable transparency
+                });
+
+                // Create the line and add it to the scene
+                const line = new THREE.Line(lineGeometry, lineMaterial);
+                line.name = `line-${direction}`;
+                sceneRef.current.add(line);
+              }
+              lastCylinderPosition = cylinder.position
+                .clone()
+                .sub(incrementalMoveVector.clone().multiplyScalar(-increment));
+              sceneRef.current.add(cylinder);
             }
-          })
-          .catch((error) => console.error("Error loading JSON file:", error));
+
+            const delay = fixations[index + 1]
+              ? (fixations[index + 1]["start timestamp"] -
+                  fixations[index]["start timestamp"]) *
+                1000
+              : fixation.duration;
+
+            // Recursive call with the next index
+            setTimeout(() => {
+              addFixationSpheres(
+                fixations,
+                offset,
+                matrix,
+                direction,
+                index + 1
+              );
+            }, delay);
+          }
+
+          // Fetch the JSON file
+          fetch(jsonFilePath)
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then((data) => {
+              // Assuming 'data' is the array of objects
+              const matchingObject = data.find(
+                (item) =>
+                  item["observer id"].toString() === observerId.toString()
+              );
+              if (matchingObject) {
+                // Access and log the orientation from the matching object
+                const orientation = matchingObject.condition.orientation;
+
+                const offset = matchingObject.condition.offset;
+
+                // Creating a Matrix4 from the 3x3 rotation matrix
+                const matrix = new THREE.Matrix4();
+                matrix.set(
+                  orientation[0],
+                  orientation[1],
+                  orientation[2],
+                  0,
+                  orientation[3],
+                  orientation[4],
+                  orientation[5],
+                  0,
+                  orientation[6],
+                  orientation[7],
+                  orientation[8],
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                );
+
+                // Read and console log the fixations attribute
+                const fixations = matchingObject.fixations;
+                if (fixations) {
+                  setTimeout(() => {
+                    addFixationSpheres(fixations, offset, matrix, direction);
+                  }, fixations[0]["start timestamp"] * 1000);
+                }
+              } else {
+                console.log(
+                  "No matching object found for observer ID:",
+                  observerId
+                );
+              }
+            })
+            .catch((error) => console.error("Error loading JSON file:", error));
+        });
       }
-
-      setTimeViz(false);
-
-      // Animation loop to render the scene
-      const animate = () => {
-        requestAnimationFrame(animate);
-        controls.update(); // Required if damping or auto-rotation is enabled
-        renderer.render(scene, camera);
-      };
-      animate();
     }
-  }, [observerId, modelFileName, timeViz, setTimeViz]);
+
+    // console.log(direction);
+  }, [dynaVizFlags]);
 
   useEffect(() => {
-    if (obsPos) {
-      // Assuming camera and observerPosRef are defined and accessible in this scope
-      const camera = cameraRef.current;
-      camera.position.copy(observerPosRef.current);
-      // Reset obsPos to false for future use
-      setObsPos(false);
-    }
-  }, [obsPos, setObsPos]);
+    const updateVisibilityBasedOnModelPosition = () => {
+      const scene = sceneRef.current;
+      // Find the model object
+      const modelObject = scene.children.find(
+        (child) => child.name === "model"
+      );
+      if (!modelObject) {
+        console.log("Model object not found");
+        return;
+      }
+
+      // Ensure the geometry has a bounding box
+      if (!modelObject.geometry.boundingBox) {
+        modelObject.geometry.computeBoundingBox();
+      }
+
+      // Calculate the center of the bounding box
+      const modelCenterPosition = new THREE.Vector3();
+      modelObject.geometry.boundingBox.getCenter(modelCenterPosition);
+
+      // const modelPosition = modelObject.position;
+
+      // Create an array to hold children whose name includes "direction"
+      const directionChildren = scene.children.filter((child) =>
+        child.name.includes("direction")
+      );
+
+      // Create an object to store direction vectors with their corresponding index
+      const directionVectors = {};
+
+      directionChildren.forEach((directionChild) => {
+        const directionVector = new THREE.Vector3();
+        directionVector.subVectors(
+          directionChild.position,
+          modelCenterPosition
+        );
+        // Use the index from the name of the directionChild as the key
+        const splitName = directionChild.name.split("-");
+        const index = splitName[splitName.length - 1];
+        directionVectors[index] = directionVector;
+      });
+
+      // Filter scene children where child.name includes "line" or "dyna-fixation"
+      const filteredChildren = scene.children.filter(
+        (child) =>
+          child.name.includes("line") || child.name.includes("dyna-fixation")
+      );
+
+      // Iterate through the filtered children
+      filteredChildren.forEach((child) => {
+        const splitName = child.name.split("-");
+        const index = splitName[splitName.length - 1];
+        if (
+          !advancedViewFlags.some((flag) => flag) ||
+          advancedViewFlags[index]
+        ) {
+          if (directionVectors[index]) {
+            let childPosition = new THREE.Vector3();
+
+            if (child.type === "Line") {
+              const vertices = child.geometry.attributes.position.array;
+              let avgX = 0,
+                avgY = 0,
+                avgZ = 0;
+              for (let i = 0; i < vertices.length; i += 3) {
+                avgX += vertices[i];
+                avgY += vertices[i + 1];
+                avgZ += vertices[i + 2];
+              }
+              const numVertices = vertices.length / 3;
+              avgX /= numVertices;
+              avgY /= numVertices;
+              avgZ /= numVertices;
+              childPosition.set(avgX, avgY, avgZ);
+            } else {
+              childPosition.copy(child.position);
+            }
+
+            const projectionScalar =
+              childPosition.dot(directionVectors[index]) /
+              directionVectors[index].lengthSq();
+            const projection = directionVectors[index]
+              .clone()
+              .multiplyScalar(projectionScalar);
+            const distance = modelCenterPosition.distanceTo(projection);
+            child.visible =
+              distance >= rangeValues.min && distance <= rangeValues.max;
+          }
+        }
+      });
+    };
+
+    updateVisibilityBasedOnModelPosition();
+  }, [rangeValues]);
+
+  useEffect(() => {
+    const scene = sceneRef.current;
+    const isAdvanced = advancedViewFlags.some((flag) => flag === true);
+
+    // Iterate over all children in the scene
+    scene.children.forEach((child) => {
+      // Default visibility to false unless conditions are met
+      let isVisible = false;
+
+      // Check if the child's name is "model"
+      if (isAdvanced) {
+        if (child.name === "model") {
+          isVisible = true;
+        } else {
+          // Check each flag in advancedViewFlags
+          advancedViewFlags.forEach((flag, index) => {
+            if (flag && child.name === `direction-${index}`) {
+              isVisible = true;
+            } else if (flag && child.name === `stat-fixation-${index}`) {
+              isVisible = statVizFlags[index];
+            } else if (
+              flag &&
+              (child.name === `dyna-fixation-${index}` ||
+                child.name === `line-${index}`)
+            ) {
+              isVisible = dynaVizFlags[index];
+            }
+          });
+        }
+      } else {
+        if (child.name === "model") {
+          isVisible = true;
+        } else {
+          advancedViewFlags.forEach((flag, index) => {
+            if (child.name === `direction-${index}`) {
+              isVisible = true;
+            } else if (child.name === `stat-fixation-${index}`) {
+              isVisible = statVizFlags[index];
+            } else if (
+              child.name === `dyna-fixation-${index}` ||
+              child.name === `line-${index}`
+            ) {
+              isVisible = dynaVizFlags[index];
+            }
+          });
+        }
+      }
+
+      // Set the visibility of the child
+      child.visible = isVisible;
+    });
+  }, [advancedViewFlags]); // Depend on advancedViewFlags to re-trigger this effect
 
   return (
     <div
       ref={canvasRef}
-      style={{ width: "500px", height: "500px", margin: "auto" }}
+      style={{
+        width: "100vw",
+        height: "100vh",
+        margin: "auto",
+      }}
     />
   );
 };
